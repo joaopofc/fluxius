@@ -41,30 +41,26 @@ exports.handler = async function (event, context) {
       timeout: 15000 
     });
 
-    // --- INÍCIO DA ETAPA DE DEBUG ---
-    console.log("--- DEBUG INICIADO ---");
-    console.log("1. TIPO da resposta recebida da API externa:", typeof response.data);
-    console.log("2. CONTEÚDO BRUTO recebido da API externa:", response.data);
-
     let responseData = response.data;
+    
     if (typeof responseData === 'string') {
       try {
-        responseData = JSON.parse(responseData);
-        console.log("3. CONTEÚDO APÓS JSON.parse:", responseData);
+        // --- INÍCIO DA CORREÇÃO FINAL ---
+        // Limpa a string de JSON para remover "trailing commas" inválidas
+        const cleanedJsonString = responseData.replace(/,(\s*[}\]])/g, '$1');
+        
+        // Tenta fazer o parse da string JÁ CORRIGIDA
+        responseData = JSON.parse(cleanedJsonString);
+        // --- FIM DA CORREÇÃO FINAL ---
       } catch (e) {
-        console.log("3. FALHOU ao tentar fazer JSON.parse. A resposta não é um JSON válido.");
+        console.error("Mesmo após a limpeza, não foi possível fazer o parse do JSON.", e);
       }
     }
-
-    const bodyToReturn = JSON.stringify(responseData);
-    console.log("4. CORPO FINAL sendo enviado de volta para o chat:", bodyToReturn);
-    console.log("--- DEBUG FINALIZADO ---");
-    // --- FIM DA ETAPA DE DEBUG ---
 
     return {
       statusCode: 200,
       headers: corsHeaders,
-      body: bodyToReturn
+      body: JSON.stringify(responseData)
     };
   } catch (error) {
     console.error('Erro no proxy da Netlify:', error.message);
@@ -74,4 +70,4 @@ exports.handler = async function (event, context) {
       body: JSON.stringify({ error: `Falha na requisição proxy: ${error.message}` })
     };
   }
-};
+}; 
