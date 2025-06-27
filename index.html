@@ -733,31 +733,53 @@
                 case 'http-request':
                     contactStatus.textContent = 'processando...';
                     try {
-                        const reqUrl = replaceVariables(node.data.url);
-                        const reqOptions = {
+                        
+                        const proxyFunctionUrl = 'https://fluxius-chat-proxy-v1.netlify.app/.netlify/functions/proxy';
+                        
+                        const originalRequestData = {
+                            targetUrl: replaceVariables(node.data.url),
                             method: node.data.method || 'GET',
-                            headers: {}
+                            headers: {},
+                            body: null
                         };
 
                         if (node.data.headers) {
                             node.data.headers.forEach(header => {
                                 if (header.key) {
-                                    reqOptions.headers[header.key] = replaceVariables(header.value);
+                                    originalRequestData.headers[header.key] = replaceVariables(header.value);
                                 }
                             });
                         }
 
-                        if (['POST', 'PUT'].includes(reqOptions.method) && node.data.body) {
-                            reqOptions.headers['Content-Type'] = 'application/json';
-                            reqOptions.body = replaceVariables(node.data.body);
+                        // Tenta converter o corpo da requisição para JSON se for um texto válido
+                        if (['POST', 'PUT'].includes(originalRequestData.method) && node.data.body) {
+                            try {
+                                originalRequestData.body = JSON.parse(replaceVariables(node.data.body));
+                            } catch (e) {
+                                console.error("O corpo da requisição não é um JSON válido:", node.data.body);
+                                // Se não for um JSON válido, envia como texto simples.
+                                originalRequestData.body = replaceVariables(node.data.body);
+                            }
                         }
 
-                        const response = await fetch(reqUrl, reqOptions);
+                        // 3. Faz a chamada para o SEU PROXY, enviando os dados da requisição no corpo
+                        const response = await fetch(proxyFunctionUrl, {
+                            method: 'POST', // A chamada para o proxy é sempre POST para podermos enviar os detalhes no corpo
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(originalRequestData)
+                        });
+
+                        // --- FIM DA ATUALIZAÇÃO FINAL ---
+
                         if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
+                            const errorBody = await response.json();
+                            throw new Error(`Erro no proxy: ${errorBody.error || response.statusText}`);
                         }
                         const responseData = await response.json();
 
+                        // O resto do código para mapear as variáveis continua o mesmo
                         if (node.data.responseMappings && Array.isArray(node.data.responseMappings)) {
                             node.data.responseMappings.forEach(mapping => {
                                 if (mapping.path && mapping.variable) {
@@ -772,7 +794,7 @@
                         }
 
                     } catch (error) {
-                        console.error('Erro na requisição HTTP:', error);
+                        console.error('Erro na requisição HTTP:', error.message);
                     } finally {
                         contactStatus.textContent = 'online';
                         executeNextNode(node.id);
