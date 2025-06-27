@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+    <link rel="shortcut icon"
+        href="https://s3.fr-par.scw.cloud/typebot/public/typebots/mpx2cejn3v2yybieh00aexv2/favIcon?v=1689183570977"
+        type="image/x-icon">
+    <title>WhatsApp (3)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        ::-webkit-scrollbar {
+            width: 0px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: transparent;
+            border-radius: 5px;
+        }
+
+        #chat-container {
+            height: 100vh;
+            /* Fallback for older browsers */
+            height: 100dvh;
+            /* Dynamic viewport height */
+            overflow-y: auto;
+        }
+
+        .chat-background {
+            background-color: #E5DDD5;
+            background-image: url('new/75366f85-571b-4d29-a338-9eb8324d8891.jpg');
+            background-size: contain;
+        }
+
+        #chat-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        #footer {
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+        }
+
+
+        .message-out {
+            background-color: #DCF8C6;
+            margin-bottom: 5px !important;
+        }
+
+        .message-in {
+            background-color: #FFFFFF;
+        }
+
+        .bubble-container {
+            position: relative;
+        }
+
+        .bubble-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 8px;
+            height: 13px;
+        }
+
+        .bubble-container.out::after {
+            right: -8px;
+            top: -3px;
+            width: 11px;
+            height: 22px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='22' viewBox='0 0 8 13'%3E%3Cpath fill='%23DCF8C6' d='M5.188,0H0v11.193l6.467-8.625C7.526,1.156,6.958,0,5.188,0z'/%3E%3C/svg%3E");
+        }
+
+        .bubble-container.in::after {
+            left: -8px;
+            top: -3px;
+            width: 11px;
+            height: 22px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='25' viewBox='0 0 8 13'%3E%3Cpath fill='white' d='M2.812,0H8v11.193L1.533,2.568C0.474,1.156,1.042,0,2.812,0z'/%3E%3C/svg%3E");
+        }
+
+        .bubble-container.no-tail::after {
+            display: none;
+        }
+
+        #chat-messages::-webkit-scrollbar {
+            display: none;
+        }
+
+        .typing-ellipsis span {
+            animation: blink 1.4s infinite both;
+            display: inline-block;
+            margin-left: 1px;
+        }
+
+        .typing-ellipsis span:nth-child(2) {
+            animation-delay: .2s;
+        }
+
+        .typing-ellipsis span:nth-child(3) {
+            animation-delay: .4s;
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: .2;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: .2;
+            }
+        }
+
+        .audio-player {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 250px;
+        }
+
+        .waveform-container {
+            flex-grow: 1;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .waveform-bar-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .waveform-bar {
+            width: 3px;
+            border-radius: 2px;
+            background-color: #A8B3B8;
+        }
+
+        .waveform-progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            overflow: hidden;
+        }
+
+        .waveform-progress .waveform-bar {
+            background-color: transparent;
+        }
+
+        .waveform-progress::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translate(10%, -50%);
+            width: 15px;
+            height: 15px;
+            background-color: #52A6FE;
+            border-radius: 50%;
+            z-index: 3;
+        }
+
+
+        .audio-player .play-button {
+            width: 32px;
+            height: 32px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .audio-player .play-button i {
+            font-size: 24px;
+            color: #54656f;
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            /* 16:9 */
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            background: #000;
+            border-radius: 8px;
+        }
+
+        .video-container iframe,
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+
+        .message-enter {
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .image-loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+        }
+
+        .loader {
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .bg-black {
+            background-color: rgb(0 0 0 / 89%);
+        }
+
+        .imgs0cs {
+            max-width: 250px;
+        }
+
+        .pb-20 {
+            padding-bottom: 140px !important;
+        }
+
+        .choice-button.btnblockcss {
+            background-color: #008069 !important;
+            border-radius: 83px;
+            padding: 8px 13px;
+            margin: 2px 0 !important;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .choice-button.btnblockcss:hover {
+            background-color: #107E71 !important;
+            transform: scale(1.05);
+            transition: all 0.1s ease-in-out;
+        }
+
+        .vid-css {
+            border-radius: 8px;
+            min-width: 19.5rem;
+            overflow: hidden;
+        }
+
+        .p-1 {
+            padding: 0.30rem !important;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-200">
+
+    <div id="loading-overlay"
+        class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center">
+        <div class="text-center">
+            <div class="loader mx-auto"></div>
+            <p class="mt-4 text-white font-semibold text-lg">Carregando chat...</p>
+        </div>
+    </div>
+
+    <div id="chat-container" class="w-full max-w-lg mx-auto flex flex-col chat-background shadow-2xl">
+        <header id="chat-header" class="bg-[#008069] text-white p-3 flex items-center shadow-md z-10 flex-shrink-0">
+            <button class="mr-4 text-white"><i class="fa-solid fa-arrow-left"></i></button>
+            <img id="bot-avatar" src="https://placehold.co/40x40/E0E0E0/000000?text=B" alt="Avatar"
+                class="w-10 h-10 rounded-full mr-3">
+            <div class="flex-grow">
+                <h2 id="bot-name" class="font-semibold text-lg">Carregando...</h2>
+                <p id="contact-status" class="text-sm text-gray-200 h-4"></p>
+            </div>
+            <div class="flex items-center space-x-5 text-xl px-2">
+                <button title="Ligar"><i class="fa-solid fa-phone"></i></button>
+                <button title="Chamada de video"><i class="fa-solid fa-video"></i></button>
+                <button title="Mais opções"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            </div>
+        </header>
+
+        <main id="chat-messages" class="flex-grow p-4 pb-20">
+            <div class="space-y-1">
+            </div>
+        </main>
+
+        <footer id="footer" class="p-2 flex items-center space-x-2 bg-transparent hidden flex-shrink-0"
+            style="background: transparent !important;">
+            <div class="flex-grow flex items-center bg-white rounded-full p-2 shadow-md">
+                <input id="message-input" type="text" placeholder="Mensagem"
+                    class="flex-grow bg-transparent focus:outline-none mx-2 text-gray-800">
+            </div>
+            <button id="action-button"
+                class="bg-[#128C7E] hover:bg-[#075E54] text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-colors flex-shrink-0">
+                <i id="send-icon" class="fa-solid fa-paper-plane"></i>
+            </button>
+        </footer>
+    </div>
+
+    <!-- Image Viewer Modal -->
+    <div id="image-viewer-modal"
+        class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden items-center justify-center p-4">
+        <button id="close-image-viewer-btn"
+            class="absolute top-4 right-5 text-white text-4xl font-light">&times;</button>
+        <img id="full-image-view" src="" class="max-w-full max-h-full object-contain" alt="Visualização ampliada">
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyCOAUpRQbLmLO4tzzK6xVeGxGO7eDF4NVQ", authDomain: "cmdadteste-hoje.firebaseapp.com", databaseURL: "https://cmdadteste-hoje-default-rtdb.firebaseio.com", projectId: "cmdadteste-hoje", storageBucket: "cmdadteste-hoje.appspot.com", messagingSenderId: "831622336654", appId: "1:831622336654:web:a393593df3eb51702cf9df" };
+        let db;
+        try {
+            const firebaseApp = initializeApp(firebaseConfig);
+            db = getDatabase(firebaseApp);
+            const auth = getAuth(firebaseApp);
+            onAuthStateChanged(auth, user => {
+                if (!user) {
+                    signInAnonymously(auth).catch(error => {
+                        console.error("Erro no login anônimo:", error);
+                        addMessageBubble("Erro de autenticação.", false);
+                    });
+                } else {
+                    console.log("Usuário autenticado:", user.uid);
+                    startFlow();
+                }
+            });
+        } catch (e) {
+            console.error("Erro ao inicializar o Firebase:", e);
+            addMessageBubble("Erro de conexão com o servidor do bot.", false);
+        }
+
+        const chatContainer = document.getElementById('chat-container');
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const actionButton = document.getElementById('action-button');
+        const contactStatus = document.getElementById('contact-status');
+        const footer = document.getElementById('footer');
+        const botNameHeader = document.getElementById('bot-name');
+        const botAvatarHeader = document.getElementById('bot-avatar');
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        const imageViewerModal = document.getElementById('image-viewer-modal');
+        const fullImageView = document.getElementById('full-image-view');
+        const closeImageViewerBtn = document.getElementById('close-image-viewer-btn');
+
+
+        let flowData = { nodes: [], connections: [], settings: {} };
+        let flowVariables = {};
+        let currentNodeId = null;
+        let isWaitingForInput = false;
+        let flowId, sessionRef;
+
+        const scrollToBottom = () => {
+            chatContainer.scrollTo({
+                top: chatContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+        };
+
+        const replaceVariables = (text) => {
+            if (!text || typeof text !== 'string') return '';
+            return text.replace(/{{(.*?)}}/g, (match, varName) => {
+                const trimmedVar = varName.trim();
+                const value = flowVariables[trimmedVar];
+
+                if (typeof value === 'object' && value !== null) {
+                    return JSON.stringify(value, null, 2);
+                }
+
+                return value !== undefined ? value : match;
+            });
+        };
+
+        function getValueFromPath(obj, path) {
+            if (!path) return undefined;
+            if (path === 'datajsonvalue') return obj;
+            return path.split('.').reduce((o, k) => (o || {})[k], obj);
+        }
+
+        function applyTheme(settings) {
+            const header = document.getElementById('chat-header');
+            const chatBackground = document.querySelector('.chat-background');
+            const footerInputContainer = document.querySelector('#footer > div');
+            const footerInput = document.getElementById('message-input');
+            const footerButton = document.getElementById('action-button');
+            const contactStatusEl = document.getElementById('contact-status');
+
+            const theme = settings.chatTheme || 'white';
+            const customBackground = settings.chatBackground;
+            const defaultBackgrounds = {
+                dark: 'https://fluxius.shop/new/bg-dark.jpg',
+                white: 'https://fluxius.shop/new/bg-white.png'
+            };
+            const backgroundUrl = customBackground || defaultBackgrounds[theme];
+
+            if (chatBackground) {
+                chatBackground.style.backgroundImage = `url('${backgroundUrl}')`;
+            }
+
+            let themeStyles = {};
+
+            if (theme === 'dark' || theme === 'dark-custom') {
+                themeStyles = {
+                    headerColor: '#1e1e1e',
+                    messageInBg: '#2a2a2a',
+                    messageOutBg: '#005C4B',
+                    bubbleInSvgFill: '#2a2a2a',
+                    bubbleOutSvgFill: '#005C4B',
+                    textColor: '#E9EDEF',
+                    footerInputBg: '#2a2e34',
+                    footerPlaceholder: '#8696a0',
+                    footerButtonBg: '#00a884',
+                    footerButtonHover: '#008a69',
+                    contactStatusColor: '#aebac1'
+                };
+
+            } else { // Light theme
+                themeStyles = {
+                    headerColor: '#008069',
+                    messageInBg: '#FFFFFF',
+                    messageOutBg: '#DCF8C6',
+                    bubbleInSvgFill: '#FFFFFF',
+                    bubbleOutSvgFill: '#DCF8C6',
+                    textColor: '#333333',
+                    footerInputBg: '#ffffff',
+                    footerPlaceholder: '#54656f',
+                    footerButtonBg: '#128C7E',
+                    footerButtonHover: '#075E54',
+                    contactStatusColor: '#e2e8f0'
+                };
+            }
+
+            header.style.backgroundColor = themeStyles.headerColor;
+            document.body.style.backgroundColor = themeStyles.footerBg || '#f0f2f5';
+            footer.style.backgroundColor = 'transparent';
+            footerInputContainer.style.backgroundColor = themeStyles.footerInputBg;
+            footerInput.style.color = themeStyles.textColor;
+            footerButton.style.backgroundColor = themeStyles.footerButtonBg;
+            contactStatusEl.style.color = themeStyles.contactStatusColor;
+
+            const bubbleInSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='25' viewBox='0 0 8 13'%3E%3Cpath fill='${encodeURIComponent(themeStyles.messageInBg)}' d='M2.812,0H8v11.193L1.533,2.568C0.474,1.156,1.042,0,2.812,0z'/%3E%3C/svg%3E`;
+            const bubbleOutSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='22' viewBox='0 0 8 13'%3E%3Cpath fill='${encodeURIComponent(themeStyles.messageOutBg)}' d='M5.188,0H0v11.193l6.467-8.625C7.526,1.156,6.958,0,5.188,0z'/%3E%3C/svg%3E`;
+
+            let dynamicStyleContent = `
+                .message-in { background-color: ${themeStyles.messageInBg}; }
+                .message-in p, .message-in .time-display { color: ${themeStyles.textColor}; }
+                .message-out { background-color: ${themeStyles.messageOutBg}; }
+                .message-out p, .message-out .time-display { color: ${themeStyles.textColor}; }
+                .bubble-container.in::after { background-image: url("${bubbleInSvg}"); }
+                .bubble-container.out::after { background-image: url("${bubbleOutSvg}"); }
+                #footer input::placeholder { color: ${themeStyles.footerPlaceholder}; }
+                #action-button:hover { background-color: ${themeStyles.footerButtonHover} !important; }
+            `;
+
+            const styleElement = document.getElementById('dynamic-theme-styles') || document.createElement('style');
+            styleElement.id = 'dynamic-theme-styles';
+            styleElement.textContent = dynamicStyleContent;
+
+            if (!document.getElementById('dynamic-theme-styles')) {
+                document.head.appendChild(styleElement);
+            }
+        }
+
+        function findNextNode(nodeId, fromPort = null) {
+            const parentGroup = flowData.nodes.find(p => p.type === 'group' && p.data?.children?.includes(nodeId));
+
+            if (parentGroup) {
+                const children = parentGroup.data.children;
+                const currentIndex = children.indexOf(nodeId);
+                if (currentIndex < children.length - 1) {
+                    const nextChildId = children[currentIndex + 1];
+                    return flowData.nodes.find(n => n.id === nextChildId);
+                } else {
+                    const connection = flowData.connections.find(c => c.from === parentGroup.id);
+                    return connection ? flowData.nodes.find(n => n.id === connection.to) : null;
+                }
+            } else {
+                const connection = flowData.connections.find(c => c.from === nodeId && (c.fromPort || null) === fromPort);
+                return connection ? flowData.nodes.find(n => n.id === connection.to) : null;
+            }
+        }
+
+        function endFlow() {
+            console.log("Fim do fluxo.");
+            footer.classList.add('hidden');
+            if (sessionRef) {
+                const sessionUpdates = {
+                    status: 'completed',
+                    endTime: new Date().toISOString()
+                };
+                update(sessionRef, sessionUpdates);
+            }
+        }
+
+        async function startFlow() {
+            if (!db) return;
+            contactStatus.textContent = 'conectando...';
+
+            const pathSegments = window.location.pathname.split('/').filter(Boolean);
+            flowId = pathSegments[pathSegments.length - 1] || 'default_flow';
+
+            // Start analytics session
+            const sessionId = `session_${Date.now()}`;
+            sessionRef = ref(db, `analytics/${flowId}/${sessionId}`);
+            set(sessionRef, { startTime: new Date().toISOString(), status: 'initiated', variables: {} });
+
+
+            const flowRef = ref(db, `published_bots/${flowId}`);
+            try {
+                const snapshot = await get(flowRef);
+                if (snapshot.exists()) {
+                    flowData = snapshot.val();
+                    flowData.nodes = flowData.nodes || [];
+                    flowData.connections = flowData.connections || [];
+                    flowData.settings = flowData.settings || {};
+
+                    applyTheme(flowData.settings);
+
+                    botNameHeader.textContent = flowData.settings.botName || 'Bot Atendimento';
+                    document.title = flowData.settings.botName || 'Bot Atendimento';
+
+                    botAvatarHeader.src = flowData.settings.botAvatar || 'https://placehold.co/40x40/E0E0E0/000000?text=B';
+                    contactStatus.textContent = 'online';
+
+                    flowData.nodes.forEach(node => {
+                        if (node.type === 'buttons' && node.data.buttons && node.data.buttons.length > 0 && typeof node.data.buttons[0] === 'string') {
+                            node.data.buttons = node.data.buttons.map(buttonText => ({ label: buttonText, target: null }));
+                        }
+                    });
+
+                    const startNode = flowData.nodes.find(n => n.type === 'start');
+                    if (startNode) {
+                        executeNextNode(startNode.id);
+                    } else {
+                        addMessageBubble("Erro: Bloco 'Início' não encontrado no fluxo.", false);
+                    }
+                } else {
+                    addMessageBubble(`Bot não encontrado. Verifique se o ID "${flowId}" está correto.`, false);
+                    botNameHeader.textContent = "Erro";
+                    contactStatus.textContent = "offline";
+                }
+            } catch (error) {
+                console.error("Erro ao carregar o fluxo:", error);
+                addMessageBubble("Não foi possível carregar o fluxo de atendimento.", false);
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        function executeNextNode(fromNodeId, options = {}) {
+            const { isButtonChoice = false, targetNodeId = null, fromPort = null } = options;
+            let nodeToExecute;
+
+            if (isButtonChoice) {
+                nodeToExecute = targetNodeId ? flowData.nodes.find(n => n.id === targetNodeId) : null;
+            } else {
+                nodeToExecute = findNextNode(fromNodeId, fromPort);
+            }
+
+            if (nodeToExecute) {
+                processNode(nodeToExecute);
+            } else {
+                endFlow();
+            }
+        }
+
+        function evaluateCondition(variableValue, operator, conditionValue) {
+            const numVar = parseFloat(variableValue);
+            const numCond = parseFloat(conditionValue);
+
+            switch (operator) {
+                case '==': return variableValue == conditionValue;
+                case '!=': return variableValue != conditionValue;
+                case 'contains': return variableValue.includes(conditionValue);
+                case '!contains': return !variableValue.includes(conditionValue);
+                case '>': return !isNaN(numVar) && !isNaN(numCond) && numVar > numCond;
+                case '<': return !isNaN(numVar) && !isNaN(numCond) && numVar < numCond;
+                default: return false;
+            }
+        }
+
+        async function processNode(node) {
+            if (!node) return;
+
+            currentNodeId = node.id;
+
+            const processedText = replaceVariables(node.data?.text);
+
+            if (node.type === 'delay') {
+                const delay = (node.data.delay || 0) * 1000;
+                if (delay > 0) {
+
+                    const nextNodeAfterDelay = findNextNode(node.id);
+                    const isNextNodeAudio = nextNodeAfterDelay && nextNodeAfterDelay.type === 'audio';
+
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
+                    if (isNextNodeAudio) {
+                        contactStatus.innerHTML = 'gravando áudio<span class="typing-ellipsis"><span>.</span><span>.</span><span>.</span></span>';
+                    } else {
+                        contactStatus.innerHTML = `digitando<span class="typing-ellipsis"><span>.</span><span>.</span><span>.</span></span>`;
+                    }
+
+                    const remainingDelay = Math.max(0, delay - 500);
+                    await new Promise(resolve => setTimeout(resolve, remainingDelay));
+
+                    contactStatus.textContent = 'online';
+                }
+                executeNextNode(node.id);
+                return;
+            }
+
+            switch (node.type) {
+                case 'message':
+                case 'image':
+                case 'audio':
+                case 'video':
+                    const mediaUrl = replaceVariables(node.data.url);
+                    addMessageBubble(processedText, false, { imageUrl: mediaUrl, audioUrl: mediaUrl, videoUrl: mediaUrl, type: node.type });
+                    executeNextNode(node.id);
+                    break;
+                case 'redirect':
+                    setTimeout(() => {
+                        const url = replaceVariables(node.data.url);
+                        if (node.data.openInNewTab) {
+                            window.open(url, '_blank');
+                        } else {
+                            window.location.href = url;
+                        }
+                    }, 1000);
+                    endFlow();
+                    break;
+                case 'buttons':
+                    addMessageBubble(processedText, false, { buttons: node.data.buttons || [], type: 'buttons' });
+                    isWaitingForInput = false;
+                    footer.classList.add('hidden');
+                    break;
+                case 'condition':
+                    const variableName = node.data.variable;
+                    const operator = node.data.operator;
+                    const conditionValue = node.data.value;
+                    const variableValue = flowVariables[variableName] || '';
+
+                    const result = evaluateCondition(String(variableValue), operator, conditionValue);
+                    const port = result ? 'if' : 'else';
+
+                    executeNextNode(node.id, { fromPort: port });
+                    break;
+                case 'input':
+                    addMessageBubble(processedText, false);
+                    isWaitingForInput = true;
+                    footer.classList.remove('hidden');
+                    messageInput.focus();
+                    break;
+                case 'group':
+                    const firstChildId = node.data.children?.[0];
+                    if (firstChildId) {
+                        const firstChildNode = flowData.nodes.find(n => n.id === firstChildId);
+                        processNode(firstChildNode);
+                    } else {
+                        executeNextNode(node.id);
+                    }
+                    break;
+                case 'http-request':
+                    contactStatus.textContent = 'processando...';
+                    try {
+                        const reqUrl = replaceVariables(node.data.url);
+                        const reqOptions = {
+                            method: node.data.method || 'GET',
+                            headers: {}
+                        };
+
+                        if (node.data.headers) {
+                            node.data.headers.forEach(header => {
+                                if (header.key) {
+                                    reqOptions.headers[header.key] = replaceVariables(header.value);
+                                }
+                            });
+                        }
+
+                        if (['POST', 'PUT'].includes(reqOptions.method) && node.data.body) {
+                            reqOptions.headers['Content-Type'] = 'application/json';
+                            reqOptions.body = replaceVariables(node.data.body);
+                        }
+
+                        const response = await fetch(reqUrl, reqOptions);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        const responseData = await response.json();
+
+                        if (node.data.responseMappings && Array.isArray(node.data.responseMappings)) {
+                            node.data.responseMappings.forEach(mapping => {
+                                if (mapping.path && mapping.variable) {
+                                    const value = getValueFromPath(responseData, mapping.path);
+                                    if (value !== undefined) {
+                                        updateSessionVariable(mapping.variable, value);
+                                    } else {
+                                        console.warn(`Caminho "${mapping.path}" não encontrado na resposta da API.`);
+                                    }
+                                }
+                            });
+                        }
+
+                    } catch (error) {
+                        console.error('Erro na requisição HTTP:', error);
+                    } finally {
+                        contactStatus.textContent = 'online';
+                        executeNextNode(node.id);
+                    }
+                    break;
+            }
+        }
+
+        function updateSessionVariable(key, value) {
+            flowVariables[key] = value;
+            if (sessionRef) {
+                const varRef = ref(db, `analytics/${flowId}/${sessionRef.key}/variables/${key}`);
+                set(varRef, value);
+            }
+        }
+
+
+        function handleButtonChoice(label, targetNodeId, buttonsContainer) {
+            addMessageBubble(label, true);
+
+            if (buttonsContainer) {
+                buttonsContainer.remove();
+            }
+            executeNextNode(currentNodeId, { isButtonChoice: true, targetNodeId: targetNodeId });
+        }
+
+
+        function handleUserInput(text) {
+            addMessageBubble(text, true);
+            if (!isWaitingForInput) return;
+
+            isWaitingForInput = false;
+            footer.classList.add('hidden');
+
+            const currentNode = flowData.nodes.find(n => n.id === currentNodeId);
+
+            if (currentNode.type === 'input' && currentNode.data.variableName) {
+                updateSessionVariable(currentNode.data.variableName, text);
+            }
+
+            executeNextNode(currentNodeId);
+        }
+
+        function openImageViewer(src) {
+            fullImageView.src = src;
+            imageViewerModal.classList.remove('hidden');
+            imageViewerModal.classList.add('flex');
+        }
+
+        function closeImageViewer() {
+            imageViewerModal.classList.add('hidden');
+            imageViewerModal.classList.remove('flex');
+            fullImageView.src = '';
+        }
+
+        actionButton.addEventListener('click', () => {
+            const text = messageInput.value.trim();
+            if (text) {
+                handleUserInput(text);
+                messageInput.value = '';
+            }
+        });
+
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                actionButton.click();
+            }
+        });
+
+        messageInput.addEventListener('focus', () => {
+            setTimeout(() => {
+                scrollToBottom();
+            }, 300);
+        });
+
+        closeImageViewerBtn.addEventListener('click', closeImageViewer);
+        imageViewerModal.addEventListener('click', (e) => {
+            if (e.target === imageViewerModal) {
+                closeImageViewer();
+            }
+        });
+
+
+        function addMessageBubble(message, isOutgoing, options = {}) {
+            const { imageUrl = '', audioUrl = '', videoUrl = '', buttons = [], type = 'message' } = options;
+            const messageList = chatMessages.querySelector('.space-y-1');
+
+            const messageWrapper = document.createElement('div');
+            messageWrapper.classList.add('message-enter');
+
+            // --- INÍCIO DA CORREÇÃO ---
+            // Define o remetente atual
+            const currentSender = isOutgoing ? 'user' : 'bot';
+
+            // Verifica o remetente da última mensagem diretamente no DOM para decidir se a cauda deve ser exibida
+            const lastMessageWrapper = messageList.lastElementChild;
+            let previousSender = null;
+            if (lastMessageWrapper) {
+                const lastBubbleContainer = lastMessageWrapper.querySelector('.bubble-container');
+                if (lastBubbleContainer) {
+                    // A classe 'out' indica uma mensagem do usuário, 'in' indica do bot
+                    previousSender = lastBubbleContainer.classList.contains('out') ? 'user' : 'bot';
+                }
+            }
+
+            const bubbleContainer = document.createElement('div');
+            bubbleContainer.className = `bubble-container ${isOutgoing ? 'out' : 'in'}`;
+
+            // Adiciona a classe 'no-tail' se o remetente for o mesmo da mensagem anterior
+            if (previousSender === currentSender) {
+                bubbleContainer.classList.add('no-tail');
+            }
+            // --- FIM DA CORREÇÃO ---
+
+
+            const bubble = document.createElement('div');
+            bubble.className = `p-1 rounded-lg shadow max-w-xs lg:max-w-md ${isOutgoing ? 'message-out' : 'message-in'}`;
+
+            if (type === 'audio' && audioUrl) {
+                const audioPlayer = document.createElement('div');
+                audioPlayer.className = 'audio-player w-full items-center p-1';
+                const playButton = document.createElement('button');
+                playButton.className = 'play-button';
+                playButton.innerHTML = `<i class="fa-solid fa-play"></i>`;
+                playButton.disabled = true;
+
+                const waveformContainer = document.createElement('div');
+                waveformContainer.className = 'waveform-container';
+
+                const waveformBg = document.createElement('div');
+                waveformBg.className = 'waveform-bar-bg';
+
+                const progress = document.createElement('div');
+                progress.className = 'waveform-progress';
+
+                const handle = document.createElement('div');
+                handle.className = 'waveform-handle';
+                progress.appendChild(handle);
+
+
+                waveformContainer.append(waveformBg, progress);
+
+                for (let i = 0; i < 40; i++) {
+                    const bar = document.createElement('div');
+                    bar.className = 'waveform-bar';
+                    const randomHeight = Math.floor(Math.random() * 95) + 5;
+                    bar.style.height = `${randomHeight}%`;
+                    waveformBg.appendChild(bar.cloneNode());
+                    progress.appendChild(bar.cloneNode());
+                }
+
+                audioPlayer.append(playButton, waveformContainer);
+
+                const metaContainer = document.createElement('div');
+                metaContainer.className = 'flex justify-between items-center px-1';
+
+                const timeDisplay = document.createElement('span');
+                timeDisplay.className = 'text-xs text-gray-500';
+                timeDisplay.textContent = '0:00';
+
+                const messageTime = document.createElement('span');
+                messageTime.className = 'text-xs text-gray-400';
+                messageTime.textContent = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+                metaContainer.append(timeDisplay, messageTime);
+
+                bubble.append(audioPlayer, metaContainer);
+
+                const audioElement = new Audio(replaceVariables(audioUrl));
+
+                const formatTime = (time) => {
+                    if (!isFinite(time)) return "0:00";
+                    const minutes = Math.floor(time / 60);
+                    const seconds = Math.floor(time % 60).toString().padStart(2, '0');
+                    return `${minutes}:${seconds}`;
+                };
+
+                audioElement.addEventListener('loadedmetadata', () => {
+                    playButton.disabled = false;
+                    timeDisplay.textContent = formatTime(audioElement.duration);
+                });
+                audioElement.addEventListener('error', (e) => {
+                    console.error('Error loading audio:', e);
+                    audioPlayer.innerHTML = '<p class="text-xs text-red-500 p-2">Erro ao carregar áudio.</p>';
+                });
+                audioElement.addEventListener('timeupdate', () => {
+                    const progressPercentage = (audioElement.currentTime / audioElement.duration) * 100;
+                    progress.style.width = `${progressPercentage}%`;
+                    timeDisplay.textContent = formatTime(audioElement.currentTime);
+                });
+
+                playButton.onclick = () => {
+                    if (audioElement.paused) {
+                        audioElement.play();
+                        playButton.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+                    } else {
+                        audioElement.pause();
+                    }
+                };
+                audioElement.addEventListener('pause', () => {
+                    playButton.innerHTML = `<i class="fa-solid fa-play"></i>`;
+                });
+                audioElement.onended = () => {
+                    playButton.innerHTML = `<i class="fa-solid fa-play"></i>`;
+                    progress.style.width = `0%`;
+                    timeDisplay.textContent = formatTime(audioElement.duration);
+                };
+
+            } else if (type === 'image' && imageUrl) {
+                const finalImageUrl = replaceVariables(imageUrl);
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'relative w-full min-h-[100px] bg-gray-200 rounded-md flex items-center justify-center cursor-pointer';
+                imageContainer.addEventListener('click', () => openImageViewer(finalImageUrl));
+
+                const loader = document.createElement('div');
+                loader.className = 'image-loader';
+                imageContainer.appendChild(loader);
+                const img = document.createElement('img');
+                img.src = finalImageUrl;
+                img.className = 'rounded-md max-w-full h-auto hidden imgs0cs';
+                img.onload = () => {
+                    loader.style.display = 'none';
+                    img.style.display = 'block';
+                    imageContainer.style.background = 'none';
+                    imageContainer.style.minHeight = '0';
+                    scrollToBottom();
+                };
+                img.onerror = () => {
+                    loader.style.display = 'none';
+                    const errorText = document.createElement('p');
+                    errorText.className = 'text-xs text-red-500 p-2';
+                    errorText.textContent = 'Falha ao carregar imagem.';
+                    imageContainer.appendChild(errorText);
+                };
+                imageContainer.appendChild(img);
+                bubble.appendChild(imageContainer);
+                bubble.classList.add('p-1');
+            } else if (type === 'video' && videoUrl) {
+                const finalVideoUrl = replaceVariables(videoUrl);
+                const videoWrapper = document.createElement('div');
+                videoWrapper.className = 'video-container my-1 vid-css';
+
+                if (finalVideoUrl.includes('youtube.com') || finalVideoUrl.includes('youtu.be')) {
+                    const videoId = finalVideoUrl.split('v=')[1]?.split('&')[0] || finalVideoUrl.split('/').pop();
+                    videoWrapper.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+                } else {
+                    videoWrapper.innerHTML = `<video controls src="${finalVideoUrl}"></video>`;
+                }
+                bubble.appendChild(videoWrapper);
+                bubble.classList.add('p-1');
+            }
+
+            if (message) {
+                const textElement = document.createElement('p');
+                textElement.className = 'break-words px-1';
+                if (imageUrl || audioUrl || videoUrl) textElement.classList.add('mt-1');
+                textElement.innerHTML = message;
+                bubble.appendChild(textElement);
+            }
+
+            if (type !== 'audio') {
+                const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const metaContainer = document.createElement('div');
+                metaContainer.className = 'flex items-center justify-end space-x-1 px-1';
+                const timeElement = document.createElement('p');
+                timeElement.className = 'text-xs text-gray-400';
+                timeElement.textContent = time;
+                metaContainer.appendChild(timeElement);
+                if (isOutgoing) {
+                    metaContainer.innerHTML += `<span class="ml-1"><i class="fa-solid fa-check-double text-blue-400"></i></span>`;
+                }
+                bubble.appendChild(metaContainer);
+            }
+
+            bubbleContainer.appendChild(bubble);
+
+            const messageContainer = document.createElement('div');
+            messageContainer.className = `flex ${isOutgoing ? 'justify-end' : 'justify-start'}`;
+            messageContainer.appendChild(bubbleContainer);
+
+            if (!isOutgoing) {
+                messageWrapper.appendChild(messageContainer);
+            } else {
+                messageWrapper.appendChild(messageContainer);
+            }
+
+            messageList.appendChild(messageWrapper);
+
+            if (type === 'buttons' && buttons.length > 0) {
+                const buttonsWrapper = document.createElement('div');
+                buttonsWrapper.className = 'flex justify-end w-full mt-2';
+
+                const buttonsContainer = document.createElement('div');
+                buttonsContainer.className = 'flex flex-row flex-wrap justify-end gap-2';
+
+                buttons.forEach(buttonData => {
+                    const button = document.createElement('button');
+                    button.className = 'choice-button btnblockcss px-4 py-2 bg-[#005c4b] text-white rounded-lg text-sm font-medium hover:bg-[#004a3c] transition-colors shadow';
+
+                    const processedLabel = replaceVariables(buttonData.label);
+                    button.textContent = processedLabel;
+
+                    button.onclick = () => {
+                        handleButtonChoice(processedLabel, buttonData.target, buttonsContainer);
+                    };
+                    buttonsContainer.appendChild(button);
+                });
+
+                buttonsWrapper.appendChild(buttonsContainer);
+                messageList.appendChild(buttonsWrapper);
+            }
+
+            scrollToBottom();
+        }
+    </script>
+</body>
+
+</html>

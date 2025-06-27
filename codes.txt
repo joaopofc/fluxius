@@ -1,0 +1,29 @@
+.add-node-btn {
+            background: radial-gradient(#45454582, transparent);
+            color: #d1d5db;
+            border-radius: 8px;
+            border: 1px solid #4e0597;
+            box-shadow: 1px 1px 9px -5px red;
+            padding: 8px 12px;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+
+
+
+#header-url-container {
+            gap:0;
+            background-color: #1f1f28; 
+            border-color: #3f3f46;
+        }
+
+        #header-flow-id-input {
+            background-color: #27272a;
+            border-color: #463f46;
+            min-width: 100px;
+            padding-left: 0;
+        }
+
+
+
+        
