@@ -1100,7 +1100,7 @@
             editorPanelContainer.classList.remove('hidden');
 
             const typeInfo = getNodeTypeInfo(node.type);
-            let editorHTML = `<div class="flex-grow p-1 overflow-y-auto"><div class="flex items-center justify-between mb-4"><h2 class="text-lg font-semibold flex items-center gap-2 text-white">${typeInfo.icon} Editando ${typeInfo.title}</h2><button id="close-editor-btn" class="text-gray-400 hover:text-white text-2xl">&times;</button></div><div id="editor-panel" class="space-y-4">`;
+            let editorHTML = `<div class="flex-grow p-1 overflow-y-auto" style="padding-bottom: 100px;"><div class="flex items-center justify-between mb-4"><h2 class="text-lg font-semibold flex items-center gap-2 text-white">${typeInfo.icon} Editando ${typeInfo.title}</h2><button id="close-editor-btn" class="text-gray-400 hover:text-white text-2xl">&times;</button></div><div id="editor-panel" class="space-y-4">`;
 
             if (node.type === 'condition') {
                 const operators = {
