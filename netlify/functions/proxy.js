@@ -1,19 +1,16 @@
 const axios = require('axios');
 
 exports.handler = async function (event, context) {
-  // Define os cabeçalhos CORS
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
   };
 
-  // Responde à requisição de verificação 'OPTIONS'
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: corsHeaders, body: '' };
   }
 
-  // Valida o corpo da requisição do chat
   let requestData;
   try {
     requestData = JSON.parse(event.body);
@@ -36,7 +33,6 @@ exports.handler = async function (event, context) {
   }
 
   try {
-    // Faz a requisição para a API externa
     const response = await axios({
       url: targetUrl,
       method: method || 'GET',
@@ -45,25 +41,30 @@ exports.handler = async function (event, context) {
       timeout: 15000 
     });
 
-    // --- INÍCIO DA CORREÇÃO ---
+    // --- INÍCIO DA ETAPA DE DEBUG ---
+    console.log("--- DEBUG INICIADO ---");
+    console.log("1. TIPO da resposta recebida da API externa:", typeof response.data);
+    console.log("2. CONTEÚDO BRUTO recebido da API externa:", response.data);
+
     let responseData = response.data;
-    
-    // Se a resposta da API for uma string, tentamos convertê-la para um objeto JSON.
     if (typeof responseData === 'string') {
       try {
         responseData = JSON.parse(responseData);
+        console.log("3. CONTEÚDO APÓS JSON.parse:", responseData);
       } catch (e) {
-        // Se não for um JSON válido, não há problema. Deixamos como está.
-        // Isso pode ser útil se a API retornar apenas um texto simples.
+        console.log("3. FALHOU ao tentar fazer JSON.parse. A resposta não é um JSON válido.");
       }
     }
-    // --- FIM DA CORREÇÃO ---
 
-    // Retorna a resposta (agora como um objeto, se possível) para o chat
+    const bodyToReturn = JSON.stringify(responseData);
+    console.log("4. CORPO FINAL sendo enviado de volta para o chat:", bodyToReturn);
+    console.log("--- DEBUG FINALIZADO ---");
+    // --- FIM DA ETAPA DE DEBUG ---
+
     return {
       statusCode: 200,
       headers: corsHeaders,
-      body: JSON.stringify(responseData)
+      body: bodyToReturn
     };
   } catch (error) {
     console.error('Erro no proxy da Netlify:', error.message);
