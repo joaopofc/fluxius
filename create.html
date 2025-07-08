@@ -13,6 +13,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Estilos do Monaco Editor -->
+    <link rel="stylesheet" data-name="vs/editor/editor.main"
+        href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs/editor/editor.main.css">
+
     <style>
         html.dark {
             color-scheme: dark;
@@ -613,7 +618,7 @@
     </style>
 </head>
 
-<body class="bg-gray-100 dark:bg-gray-900 h-screen flex flex-col" >
+<body class="bg-gray-100 dark:bg-gray-900 h-screen flex flex-col">
     <div id="toast-notification"
         class="fixed top-20 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg z-[9999] opacity-0 transition-opacity duration-300 pointer-events-none">
         <p id="toast-message"></p>
@@ -773,6 +778,11 @@
         </div>
     </div>
 
+    <!-- Scripts do Monaco Editor -->
+    <script>var require = { paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs' } };</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs/loader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs/editor/editor.main.nls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs/editor/editor.main.js"></script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -854,11 +864,16 @@
         let draggedGroupItemInfo = null;
         let tempSvgLine = null;
         let lastHoveredNodeEl = null;
-        let lastCaretPos = 0;
+        let lastCaretPos = {}; // CORREÇÃO: Inicializado como objeto
         let dropTargetInfo = { parentId: null, index: -1 };
+        let monacoEditorInstance = null;
 
 
         let pan = { x: 0, y: 0 }, scale = .6, isPanning = false;
+        // --- INÍCIO DA OTIMIZAÇÃO DE PAN ---
+        let panDelta = { x: 0, y: 0 };
+        let animationFrameId = null;
+        // --- FIM DA OTIMIZAÇÃO DE PAN ---
 
         function applyTransform() {
             canvas.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${scale})`;
@@ -869,6 +884,24 @@
                 if (selectedEl) updateToolbarPosition(selectedEl);
             }
         }
+
+        // --- INÍCIO DA OTIMIZAÇÃO DE PAN ---
+        function panLoop() {
+            if (!isPanning) {
+                animationFrameId = null;
+                return;
+            }
+
+            if (panDelta.x !== 0 || panDelta.y !== 0) {
+                pan.x += panDelta.x;
+                pan.y += panDelta.y;
+                panDelta = { x: 0, y: 0 }; // Reseta o delta
+                applyTransform();
+            }
+
+            animationFrameId = requestAnimationFrame(panLoop);
+        }
+        // --- FIM DA OTIMIZAÇÃO DE PAN ---
 
         function updateToolbarPosition(nodeEl) {
             if (!nodeEl || !nodeToolbar.classList.contains('flex')) return;
@@ -963,8 +996,8 @@
                         const childTypeInfo = getNodeTypeInfo(childNode.type);
                         const childPreview = getNodeContentPreview(childNode);
                         contentHTML += `<div class="group-item" draggable="true" data-child-id="${childId}" data-parent-id="${node.id}">
-                                ${childTypeInfo.icon} <span class="group-item-text">${childPreview}</span>
-                            </div>`;
+                                        ${childTypeInfo.icon} <span class="group-item-text">${childPreview}</span>
+                                    </div>`;
                     }
                 });
                 contentHTML += '</div>';
@@ -973,9 +1006,9 @@
                 let buttonsHTML = '<div class="space-y-1">';
                 (node.data.buttons || []).forEach((button, index) => {
                     buttonsHTML += `<div class="button-item">
-                                        <span>${button.label}</span>
-                                        <div class="anchor-point output" data-button-index="${index}" title="Arrastar para conectar"></div>
-                                    </div>`;
+                                            <span>${button.label}</span>
+                                            <div class="anchor-point output" data-button-index="${index}" title="Arrastar para conectar"></div>
+                                        </div>`;
                 });
                 buttonsHTML += '</div>';
                 contentHTML = buttonsText + buttonsHTML;
@@ -987,15 +1020,15 @@
             let outputAnchorHTML = '';
             if (node.type === 'condition') {
                 outputAnchorHTML = `
-                    <div class="output-port if">
-                        <span class="output-port-label">Se</span>
-                        <div class="anchor-point output" data-output-type="if" title="Arrastar para conectar (Se)"></div>
-                    </div>
-                    <div class="output-port else">
-                        <span class="output-port-label">Senão</span>
-                        <div class="anchor-point output" data-output-type="else" title="Arrastar para conectar (Senão)"></div>
-                    </div>
-                `;
+                        <div class="output-port if">
+                            <span class="output-port-label">Se</span>
+                            <div class="anchor-point output" data-output-type="if" title="Arrastar para conectar (Se)"></div>
+                        </div>
+                        <div class="output-port else">
+                            <span class="output-port-label">Senão</span>
+                            <div class="anchor-point output" data-output-type="else" title="Arrastar para conectar (Senão)"></div>
+                        </div>
+                    `;
             } else if (node.type !== 'buttons' && node.type !== 'redirect') {
                 outputAnchorHTML = '<div class="anchor-point output" title="Arrastar para conectar"></div>';
             }
@@ -1061,7 +1094,7 @@
         }
 
         function populateAddNodePanel() {
-            const nodeTypes = ['message', 'image', 'audio', 'video', 'condition', 'http-request', 'buttons', 'delay', 'input', 'group', 'redirect'];
+            const nodeTypes = ['message', 'image', 'audio', 'video', 'condition', 'http-request', 'buttons', 'delay', 'input', 'group', 'redirect', 'embed'];
             addNodePanel.innerHTML = '';
             nodeTypes.forEach(type => {
                 const typeInfo = getNodeTypeInfo(type);
@@ -1083,6 +1116,11 @@
         }
 
         function openEditorPanel(nodeId) {
+            if (monacoEditorInstance) {
+                monacoEditorInstance.dispose();
+                monacoEditorInstance = null;
+            }
+
             if (selectedNodeId && selectedNodeId !== nodeId) {
                 const prevSelectedEl = document.getElementById(selectedNodeId);
                 if (prevSelectedEl) prevSelectedEl.classList.remove('selected');
@@ -1100,7 +1138,7 @@
             editorPanelContainer.classList.remove('hidden');
 
             const typeInfo = getNodeTypeInfo(node.type);
-            let editorHTML = `<div class="flex-grow p-1 overflow-y-auto" style="padding-bottom: 100px;"><div class="flex items-center justify-between mb-4"><h2 class="text-lg font-semibold flex items-center gap-2 text-white">${typeInfo.icon} Editando ${typeInfo.title}</h2><button id="close-editor-btn" class="text-gray-400 hover:text-white text-2xl">&times;</button></div><div id="editor-panel" class="space-y-4">`;
+            let editorHTML = `<div class="flex-grow p-1 overflow-y-auto"><div class="flex items-center justify-between mb-4"><h2 class="text-lg font-semibold flex items-center gap-2 text-white">${typeInfo.icon} Editando ${typeInfo.title}</h2><button id="close-editor-btn" class="text-gray-400 hover:text-white text-2xl">&times;</button></div><div id="editor-panel" class="space-y-4">`;
 
             if (node.type === 'condition') {
                 const operators = {
@@ -1124,8 +1162,20 @@
                 `;
             } else if (node.type === 'group') {
                 editorHTML += `<div><label>Título do Grupo</label><input type="text" id="node-text" value="${node.data.title || ''}"></div>`;
-            } else if (['message', 'image', 'audio', 'video', 'buttons', 'input'].includes(node.type)) {
+            } else if (['message', 'image', 'audio', 'video', 'buttons'].includes(node.type)) {
                 editorHTML += `<div><label>Texto</label><textarea id="node-text" rows="4">${node.data.text || ''}</textarea></div>`;
+            } else if (node.type === 'input') {
+                editorHTML += `<div><label>Texto da Pergunta</label><textarea id="node-text" rows="4">${node.data.text || ''}</textarea></div>
+                    <div>
+                        <label for="node-input-type">Tipo de Resposta Esperada</label>
+                        <select id="node-input-type">
+                            <option value="text">Texto (Padrão)</option>
+                            <option value="email">Email</option>
+                            <option value="phone">Celular (Apenas números)</option>
+                            <option value="number">Número</option>
+                        </select>
+                    </div>
+                    <div><label>Salvar Resposta na Variável</label><input type="text" id="node-variable" placeholder="Ex: nome_cliente" value="${node.data.variableName || ''}"></div>`;
             } else if (node.type === 'http-request') {
                 const methods = ['GET', 'POST', 'PUT', 'DELETE'];
                 const methodOptions = methods.map(m => `<option value="${m}" ${node.data.method === m ? 'selected' : ''}>${m}</option>`).join('');
@@ -1154,7 +1204,7 @@
                              <h3 class="accordion-header flex justify-between items-center"><span>Corpo da Requisição (Body)</span><i class="fas fa-chevron-down accordion-icon"></i></h3>
                              <div class="accordion-content">
                                  <div class="p-3 border-t border-gray-700">
-                                     <textarea id="http-body" rows="5" placeholder='{ "chave": "valor" }'>${node.data.body || ''}</textarea>
+                                     <div id="http-body-editor" style="height: 200px; border: 1px solid #333;"></div>
                                  </div>
                              </div>
                         </div>
@@ -1180,6 +1230,18 @@
                             <span class="toggle-switch-dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
                         </label>
                     </div>`;
+            } else if (node.type === 'embed') {
+                editorHTML += `<div>
+                        <label for="node-embed-code">URL ou Código de Incorporação</label>
+                        <textarea id="node-embed-code" rows="5" placeholder="Cole o link do site ou o código do iframe aqui...">${node.data.embedCode || ''}</textarea>
+                    </div>
+                    <div>
+                        <label for="node-embed-height" class="flex justify-between items-center">
+                            <span>Altura</span>
+                            <span id="embed-height-value" class="font-normal text-gray-400">${node.data.height || 400}px</span>
+                        </label>
+                        <input type="range" id="node-embed-height" min="100" max="1000" step="10" value="${node.data.height || 400}" class="w-full">
+                    </div>`;
             }
 
             if (node.type === 'image' || node.type === 'audio' || node.type === 'video') {
@@ -1193,19 +1255,16 @@
             }
             if (node.type === 'buttons') {
                 editorHTML += `<div>
-                                    <label class="block mb-2">Botões</label>
-                                    <div id="buttons-list-container" class="space-y-2"></div>
-                                    <button id="add-button-btn" class="mt-3 px-3 py-1 text-white text-sm rounded transition-colors">+ Adicionar Botão</button>
-                                   </div>`;
+                                        <label class="block mb-2">Botões</label>
+                                        <div id="buttons-list-container" class="space-y-2"></div>
+                                        <button id="add-button-btn" class="mt-3 px-3 py-1 text-white text-sm rounded transition-colors">+ Adicionar Botão</button>
+                                       </div>`;
             }
             if (node.type === 'delay') {
                 editorHTML += `<div><label>Aguardar (segundos)</label><input type="number" id="node-delay" value="${node.data.delay || 1}" min="1"></div>`;
             }
-            if (node.type === 'input') {
-                editorHTML += `<div><label>Salvar na Variável</label><input type="text" id="node-variable" placeholder="Ex: nome_cliente" value="${node.data.variableName || ''}"></div>`;
-            }
 
-            if (['message', 'image', 'audio', 'video', 'buttons', 'http-request', 'redirect', 'condition'].includes(node.type)) {
+            if (['message', 'image', 'audio', 'video', 'buttons', 'http-request', 'redirect', 'condition', 'input', 'embed'].includes(node.type)) {
                 editorHTML += `<div class="variables-container"></div>`;
             }
 
@@ -1246,19 +1305,23 @@
                         const textToInsert = `{{${variable}}}`;
 
                         if (lastCaretPos && lastCaretPos.el) {
-                            const { el, pos } = lastCaretPos;
-                            const currentVal = el.value;
-                            const start = pos;
+                            if (lastCaretPos.el.setValue) { // Check if it's a Monaco editor instance
+                                lastCaretPos.el.trigger('keyboard', 'type', { text: textToInsert });
+                            } else {
+                                const { el, pos } = lastCaretPos;
+                                const currentVal = el.value;
+                                const start = pos;
 
-                            const newVal = currentVal.substring(0, start) + textToInsert + currentVal.substring(start);
-                            el.value = newVal;
+                                const newVal = currentVal.substring(0, start) + textToInsert + currentVal.substring(start);
+                                el.value = newVal;
 
-                            const newCaretPos = start + textToInsert.length;
-                            lastCaretPos.pos = newCaretPos;
+                                const newCaretPos = start + textToInsert.length;
+                                lastCaretPos.pos = newCaretPos;
 
-                            el.focus();
-                            el.setSelectionRange(newCaretPos, newCaretPos);
-                            el.dispatchEvent(new Event('input', { bubbles: true }));
+                                el.focus();
+                                el.setSelectionRange(newCaretPos, newCaretPos);
+                                el.dispatchEvent(new Event('input', { bubbles: true }));
+                            }
                         }
                     });
                 });
@@ -1270,6 +1333,10 @@
 
 
         function closeEditorPanel() {
+            if (monacoEditorInstance) {
+                monacoEditorInstance.dispose();
+                monacoEditorInstance = null;
+            }
             if (selectedNodeId) {
                 const prevSelectedEl = document.getElementById(selectedNodeId);
                 if (prevSelectedEl) prevSelectedEl.classList.remove('selected');
@@ -1281,7 +1348,20 @@
         }
 
         function addNode(type, position = null) {
-            const defaultData = { message: { text: 'Nova mensagem...' }, image: { text: 'Legenda da imagem...', url: '' }, audio: { text: 'Descrição do áudio...', url: '' }, video: { text: 'Descrição do vídeo...', url: '' }, 'http-request': { method: 'GET', url: '', headers: [{ key: '', value: '' }], body: '', responseMappings: [{ path: 'datajsonvalue', variable: 'response' }] }, buttons: { text: 'Escolha uma opção:', buttons: [{ label: 'Botão 1', target: null }] }, delay: { delay: 2 }, input: { text: 'Qual é o seu nome?', variableName: 'nome' }, group: { title: 'Novo Grupo', children: [] }, redirect: { url: 'https://', openInNewTab: true }, condition: { variable: '', operator: '==', value: '' } };
+            const defaultData = {
+                message: { text: 'Nova mensagem...' },
+                image: { text: 'Legenda da imagem...', url: '' },
+                audio: { text: 'Descrição do áudio...', url: '' },
+                video: { text: 'Descrição do vídeo...', url: '' },
+                'http-request': { method: 'GET', url: '', headers: [{ key: '', value: '' }], body: '', responseMappings: [{ path: 'datajsonvalue', variable: 'response' }] },
+                buttons: { text: 'Escolha uma opção:', buttons: [{ label: 'Botão 1', target: null }] },
+                delay: { delay: 2 },
+                input: { text: 'Qual é o seu nome?', variableName: 'nome', inputType: 'text' },
+                group: { title: 'Novo Grupo', children: [] },
+                redirect: { url: 'https://', openInNewTab: true },
+                condition: { variable: '', operator: '==', value: '' },
+                embed: { embedCode: '', height: 400 }
+            };
             const pos = position ? position : screenToCanvasCoords({ clientX: canvasContainer.clientWidth / 2, clientY: canvasContainer.clientHeight / 2 });
             const newNode = { id: `node_${Date.now()}`, type, position: pos, data: { ...(defaultData[type] || {}) } };
             nodes.push(newNode);
@@ -1384,6 +1464,7 @@
                 case 'group': return { icon: `<i class="fa-solid fa-layer-group"></i>`, title: 'Grupo' };
                 case 'redirect': return { icon: `<i class="fa-solid fa-arrow-up-right-from-square"></i>`, title: 'Redirecionar' };
                 case 'condition': return { icon: `<i class="fa-solid fa-code-branch"></i>`, title: 'Condicional' };
+                case 'embed': return { icon: `<i class="fa-solid fa-code"></i>`, title: 'Incorporar' };
                 case 'start': default: return { icon: `<i class="fa-solid fa-play"></i>`, title: 'Início' };
             }
         }
@@ -1391,7 +1472,7 @@
         function getNodeContentPreview(node) {
             if (node.type === 'start') return 'O funil começa aqui.';
             if (node.type === 'delay') return `Aguardar ${node.data.delay || 1} segundos.`;
-            if (node.type === 'input') return `Coletar em {{${node.data.variableName || 'variável'}}}`;
+            if (node.type === 'input') return `Coletar ${node.data.inputType || 'texto'} em {{${node.data.variableName || 'variável'}}}`;
             if (node.type === 'group') return `${node.data.children?.length || 0} etapa(s) no grupo.`;
             if (node.type === 'buttons') return node.data.text || 'Edite este bloco.';
             if (node.type === 'http-request') return `${node.data.method || 'GET'}: ${node.data.url || 'Nenhuma URL'}`;
@@ -1400,6 +1481,12 @@
                 const value = node.data.value || 'valor';
                 const valueDisplay = value.startsWith('{{') && value.endsWith('}}') ? value : `"${value}"`;
                 return `Se {{${node.data.variable || 'variável'}}} ${node.data.operator || '=='} ${valueDisplay}`;
+            }
+            if (node.type === 'embed') {
+                const code = node.data.embedCode || '';
+                if (code.trim().startsWith('<iframe')) return 'Conteúdo Iframe';
+                if (code.trim().startsWith('http')) return 'Conteúdo Web';
+                return 'Nenhum conteúdo definido';
             }
             return node.data.text || node.data.url || `Edite este bloco.`;
         }
@@ -1576,7 +1663,7 @@
             };
 
             // Generic listener for variable insertion
-            const variableInputs = ['node-text', 'http-url', 'http-body', 'node-url', 'node-condition-variable', 'node-condition-value'];
+            const variableInputs = ['node-text', 'http-url', 'node-url', 'node-condition-variable', 'node-condition-value', 'node-embed-code'];
             variableInputs.forEach(inputId => {
                 const inputEl = document.getElementById(inputId);
                 if (inputEl) {
@@ -1613,27 +1700,71 @@
                 if (newTabInput) newTabInput.addEventListener('change', (e) => updateNodeData('openInNewTab', e.target.checked));
             }
 
+            if (node.type === 'embed') {
+                const embedCodeInput = document.getElementById('node-embed-code');
+                const embedHeightSlider = document.getElementById('node-embed-height');
+                const embedHeightValue = document.getElementById('embed-height-value');
+
+                if (embedCodeInput) embedCodeInput.addEventListener('input', (e) => updateNodeData('embedCode', e.target.value));
+                if (embedHeightSlider) {
+                    embedHeightSlider.addEventListener('input', (e) => {
+                        const newHeight = parseInt(e.target.value, 10);
+                        updateNodeData('height', newHeight);
+                        if (embedHeightValue) embedHeightValue.textContent = `${newHeight}px`;
+                    });
+                }
+            }
+
             const delayInput = document.getElementById('node-delay');
             if (delayInput) delayInput.addEventListener('input', (e) => updateNodeData('delay', parseInt(e.target.value, 10)));
 
-            const variableInput = document.getElementById('node-variable');
-            if (variableInput) {
-                variableInput.addEventListener('input', (e) => {
-                    updateNodeData('variableName', e.target.value)
-                    refreshAvailableVariables();
-                });
+            // --- Listener for Input Node Type ---
+            if (node.type === 'input') {
+                const variableInput = document.getElementById('node-variable');
+                if (variableInput) {
+                    variableInput.addEventListener('input', (e) => {
+                        updateNodeData('variableName', e.target.value)
+                        refreshAvailableVariables();
+                    });
+                }
+
+                const inputTypeSelect = document.getElementById('node-input-type');
+                if (inputTypeSelect) {
+                    inputTypeSelect.value = node.data.inputType || 'text'; // Set initial value
+                    inputTypeSelect.addEventListener('change', (e) => updateNodeData('inputType', e.target.value));
+                }
             }
         }
 
         function setupHttpRequestEditor(node, updateNodeData) {
             const methodSelect = document.getElementById('http-method');
             const urlInput = document.getElementById('http-url');
-            const bodyContainer = document.getElementById('http-body-container');
-            const bodyInput = document.getElementById('http-body');
             const headersContainer = document.getElementById('http-headers-container');
             const addHeaderBtn = document.getElementById('add-header-btn');
             const mappingsContainer = document.getElementById('http-mappings-container');
             const addMappingBtn = document.getElementById('add-mapping-btn');
+
+            const editorContainer = document.getElementById('http-body-editor');
+            if (editorContainer) {
+                monacoEditorInstance = monaco.editor.create(editorContainer, {
+                    value: node.data.body || '{\n\t\n}',
+                    language: 'json',
+                    theme: 'vs-dark',
+                    automaticLayout: true,
+                    minimap: { enabled: false },
+                    lineNumbers: 'on',
+                    wordWrap: 'on'
+                });
+
+                monacoEditorInstance.getModel().onDidChangeContent(() => {
+                    const currentValue = monacoEditorInstance.getValue();
+                    updateNodeData('body', currentValue);
+                });
+
+                monacoEditorInstance.onDidFocusEditorWidget(() => {
+                    lastCaretPos.el = monacoEditorInstance;
+                });
+            }
 
             const renderHeaders = () => {
                 headersContainer.innerHTML = '';
@@ -1710,7 +1841,6 @@
             });
 
             urlInput.addEventListener('input', (e) => updateNodeData('url', e.target.value));
-            bodyInput.addEventListener('input', (e) => updateNodeData('body', e.target.value));
 
             addHeaderBtn.addEventListener('click', () => {
                 if (!node.data.headers) node.data.headers = [];
@@ -1737,6 +1867,11 @@
                 isPanning = true;
                 canvasContainer.classList.add('panning');
                 closeEditorPanel();
+                // --- INÍCIO DA OTIMIZAÇÃO DE PAN ---
+                if (!animationFrameId) {
+                    animationFrameId = requestAnimationFrame(panLoop);
+                }
+                // --- FIM DA OTIMIZAÇÃO DE PAN ---
             }
         });
         canvasContainer.addEventListener('touchstart', (e) => {
@@ -1745,7 +1880,11 @@
 
         document.addEventListener('mousemove', (e) => {
             if (isPanning) {
-                pan.x += e.movementX; pan.y += e.movementY; applyTransform();
+                // --- INÍCIO DA OTIMIZAÇÃO DE PAN ---
+                // Apenas acumula o movimento, não redesenha
+                panDelta.x += e.movementX;
+                panDelta.y += e.movementY;
+                // --- FIM DA OTIMIZAÇÃO DE PAN ---
             } else if (dragInfo.isDragging && activeNodeElement) {
                 const pos = screenToCanvasCoords(e);
                 const node = nodes.find(n => n.id === activeNodeElement.id);
@@ -1912,7 +2051,7 @@
                     return;
                 }
                 const rect = parentEl.getBoundingClientRect();
-                const isOutside = e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom;
+                const isOutside = e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY < rect.bottom;
 
                 if (isOutside) {
                     const parentNode = nodes.find(n => n.id === draggedGroupItemInfo.parentId);
@@ -2010,7 +2149,7 @@
                 } else {
                     const parentNode = nodes.find(n => n.id === dropTargetInfo.parentId);
                     if (parentNode) {
-                        const defaultData = { message: { text: 'Nova mensagem...' }, image: { text: 'Legenda da imagem...', url: '' }, audio: { text: 'Descrição do áudio...', url: '' }, video: { text: 'Descrição do vídeo...', url: '' }, 'http-request': { method: 'GET', url: '', headers: [{ key: '', value: '' }], body: '', responseMappings: [{ path: 'datajsonvalue', variable: 'response' }] }, buttons: { text: 'Escolha uma opção:', buttons: [{ label: 'Botão 1', target: null }] }, delay: { delay: 2 }, input: { text: 'Qual é o seu nome?', variableName: 'nome' }, group: { title: 'Novo Grupo', children: [] }, redirect: { url: 'https://', openInNewTab: true }, condition: { variable: '', operator: '==', value: '' } };
+                        const defaultData = { message: { text: 'Nova mensagem...' }, image: { text: 'Legenda da imagem...', url: '' }, audio: { text: 'Descrição do áudio...', url: '' }, video: { text: 'Descrição do vídeo...', url: '' }, 'http-request': { method: 'GET', url: '', headers: [{ key: '', value: '' }], body: '', responseMappings: [{ path: 'datajsonvalue', variable: 'response' }] }, buttons: { text: 'Escolha uma opção:', buttons: [{ label: 'Botão 1', target: null }] }, delay: { delay: 2 }, input: { text: 'Qual é o seu nome?', variableName: 'nome' }, group: { title: 'Novo Grupo', children: [] }, redirect: { url: 'https://', openInNewTab: true }, condition: { variable: '', operator: '==', value: '' }, embed: { embedCode: '', height: 400 } };
                         const newNode = { id: `node_${Date.now()}`, type, data: { ...(defaultData[type] || {}) } };
                         nodes.push(newNode);
                         if (!parentNode.data.children) parentNode.data.children = [];
@@ -2035,7 +2174,7 @@
         function sanitizeFlowId(id) {
             return id
                 .toLowerCase()
-                .replace(/\s+/g, '-')     // Replace spaces with hyphens
+                .replace(/\s+/g, '-')   // Replace spaces with hyphens
                 .replace(/[^a-z0-9-]/g, ''); // Remove all non-alphanumeric characters except hyphens
         }
 

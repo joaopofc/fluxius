@@ -10,7 +10,7 @@
     <title>WhatsApp (3)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-        xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -316,6 +316,9 @@
         .p-1 {
             padding: 0.30rem !important;
         }
+        .max-w-xs {
+            max-width: 20rem !important;
+        }
     </style>
 </head>
 
@@ -363,11 +366,10 @@
         </footer>
     </div>
 
-    <!-- Image Viewer Modal -->
     <div id="image-viewer-modal"
         class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden items-center justify-center p-4">
         <button id="close-image-viewer-btn"
-            class="absolute top-4 right-5 text-white text-4xl font-light">&times;</button>
+            class="absolute top-4 right-5 text-white text-4xl font-light">×</button>
         <img id="full-image-view" src="" class="max-w-full max-h-full object-contain" alt="Visualização ampliada">
     </div>
 
@@ -476,6 +478,7 @@
                     bubbleInSvgFill: '#2a2a2a',
                     bubbleOutSvgFill: '#005C4B',
                     textColor: '#E9EDEF',
+                    footerBg: '#1e1e1e',
                     footerInputBg: '#2a2e34',
                     footerPlaceholder: '#8696a0',
                     footerButtonBg: '#00a884',
@@ -491,6 +494,7 @@
                     bubbleInSvgFill: '#FFFFFF',
                     bubbleOutSvgFill: '#DCF8C6',
                     textColor: '#333333',
+                    footerBg: '#E5E7EB',
                     footerInputBg: '#ffffff',
                     footerPlaceholder: '#54656f',
                     footerButtonBg: '#128C7E',
@@ -501,7 +505,6 @@
 
             header.style.backgroundColor = themeStyles.headerColor;
             document.body.style.backgroundColor = themeStyles.footerBg || '#f0f2f5';
-            footer.style.backgroundColor = 'transparent';
             footerInputContainer.style.backgroundColor = themeStyles.footerInputBg;
             footerInput.style.color = themeStyles.textColor;
             footerButton.style.backgroundColor = themeStyles.footerButtonBg;
@@ -707,7 +710,7 @@
                 case 'condition':
                     const variableName = node.data.variable;
                     const operator = node.data.operator;
-                    const conditionValue = node.data.value;
+                    const conditionValue = replaceVariables(node.data.value);
                     const variableValue = flowVariables[variableName] || '';
 
                     const result = evaluateCondition(String(variableValue), operator, conditionValue);
@@ -730,6 +733,16 @@
                         executeNextNode(node.id);
                     }
                     break;
+                case 'embed': // --- ADIÇÃO INICIADA ---
+                    addMessageBubble('', false, {
+                        type: 'embed',
+                        embedData: {
+                            code: node.data.embedCode,
+                            height: node.data.height
+                        }
+                    });
+                    executeNextNode(node.id);
+                    break; // --- ADIÇÃO FINALIZADA ---
                 case 'http-request':
                     contactStatus.textContent = 'processando...';
                     try {
@@ -751,35 +764,29 @@
                             });
                         }
 
-                        // Tenta converter o corpo da requisição para JSON se for um texto válido
                         if (['POST', 'PUT'].includes(originalRequestData.method) && node.data.body) {
                             try {
                                 originalRequestData.body = JSON.parse(replaceVariables(node.data.body));
                             } catch (e) {
                                 console.error("O corpo da requisição não é um JSON válido:", node.data.body);
-                                // Se não for um JSON válido, envia como texto simples.
                                 originalRequestData.body = replaceVariables(node.data.body);
                             }
                         }
 
-                        // 3. Faz a chamada para o SEU PROXY, enviando os dados da requisição no corpo
                         const response = await fetch(proxyFunctionUrl, {
-                            method: 'POST', // A chamada para o proxy é sempre POST para podermos enviar os detalhes no corpo
+                            method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify(originalRequestData)
                         });
-
-                        // --- FIM DA ATUALIZAÇÃO FINAL ---
-
+                        
                         if (!response.ok) {
                             const errorBody = await response.json();
                             throw new Error(`Erro no proxy: ${errorBody.error || response.statusText}`);
                         }
                         const responseData = await response.json();
 
-                        // O resto do código para mapear as variáveis continua o mesmo
                         if (node.data.responseMappings && Array.isArray(node.data.responseMappings)) {
                             node.data.responseMappings.forEach(mapping => {
                                 if (mapping.path && mapping.variable) {
@@ -820,16 +827,64 @@
             }
             executeNextNode(currentNodeId, { isButtonChoice: true, targetNodeId: targetNodeId });
         }
+        
+        // --- ADIÇÃO INICIADA: Funções de validação ---
+        function validateInput(text, type) {
+            if (!type || type === 'text') {
+                return true; // Nenhuma validação para texto puro
+            }
 
+            switch (type) {
+                case 'email':
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    return emailRegex.test(text);
+                
+                case 'number':
+                    return !isNaN(parseFloat(text)) && isFinite(text);
+
+                case 'phone':
+                    const digits = text.replace(/\D/g, '');
+                    return /^\d{10,11}$/.test(digits);
+
+                default:
+                    return true;
+            }
+        }
+        // --- ADIÇÃO FINALIZADA ---
 
         function handleUserInput(text) {
             addMessageBubble(text, true);
             if (!isWaitingForInput) return;
 
+            const currentNode = flowData.nodes.find(n => n.id === currentNodeId);
+
+            // --- INÍCIO DA LÓGICA DE VALIDAÇÃO ---
+            if (currentNode && currentNode.type === 'input') {
+                const inputType = currentNode.data.inputType || 'text';
+                const isValid = validateInput(text, inputType);
+
+                if (!isValid) {
+                    let errorMessage = "Formato inválido. Por favor, tente novamente.";
+                    switch (inputType) {
+                        case 'email':
+                            errorMessage = "Formato de e-mail inválido. Ex: nome@dominio.com";
+                            break;
+                        case 'number':
+                            errorMessage = "Por favor, digite apenas números.";
+                            break;
+                        case 'phone':
+                            errorMessage = "Formato de celular inválido. Digite o DDD e o número.";
+                            break;
+                    }
+                    setTimeout(() => addMessageBubble(errorMessage, false), 500);
+                    return; 
+                }
+            }
+            // --- FIM DA LÓGICA DE VALIDAÇÃO ---
+
+
             isWaitingForInput = false;
             footer.classList.add('hidden');
-
-            const currentNode = flowData.nodes.find(n => n.id === currentNodeId);
 
             if (currentNode.type === 'input' && currentNode.data.variableName) {
                 updateSessionVariable(currentNode.data.variableName, text);
@@ -877,25 +932,54 @@
             }
         });
 
+        // --- ADIÇÃO INICIADA: Nova função para criar o elemento de embed ---
+        function createEmbedElement(embedData) {
+            const container = document.createElement('div');
+            container.className = 'w-full rounded-md overflow-hidden';
+            container.style.height = `${embedData.height || 400}px`; // Usa a altura definida ou um padrão
+
+            const code = (embedData.code || '').trim();
+
+            if (/<iframe/i.test(code)) {
+                // Se o código já é um iframe, insere diretamente
+                container.innerHTML = code;
+                const iframe = container.querySelector('iframe');
+                if (iframe) {
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%';
+                    iframe.setAttribute('frameborder', '0');
+                }
+            } else if (/^https?:\/\//i.test(code)) {
+                // Se for uma URL, cria um iframe
+                const iframe = document.createElement('iframe');
+                iframe.src = code;
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.setAttribute('frameborder', '0');
+                iframe.setAttribute('allowfullscreen', '');
+                container.appendChild(iframe);
+            } else {
+                container.innerHTML = '<p class="text-xs text-red-500 p-2">Código de incorporação inválido.</p>';
+                container.style.height = 'auto';
+            }
+
+            return container;
+        }
+        // --- ADIÇÃO FINALIZADA ---
 
         function addMessageBubble(message, isOutgoing, options = {}) {
-            const { imageUrl = '', audioUrl = '', videoUrl = '', buttons = [], type = 'message' } = options;
+            const { imageUrl = '', audioUrl = '', videoUrl = '', buttons = [], type = 'message', embedData = null } = options; // Adicionado embedData
             const messageList = chatMessages.querySelector('.space-y-1');
 
             const messageWrapper = document.createElement('div');
             messageWrapper.classList.add('message-enter');
 
-            // --- INÍCIO DA CORREÇÃO ---
-            // Define o remetente atual
             const currentSender = isOutgoing ? 'user' : 'bot';
-
-            // Verifica o remetente da última mensagem diretamente no DOM para decidir se a cauda deve ser exibida
             const lastMessageWrapper = messageList.lastElementChild;
             let previousSender = null;
             if (lastMessageWrapper) {
                 const lastBubbleContainer = lastMessageWrapper.querySelector('.bubble-container');
                 if (lastBubbleContainer) {
-                    // A classe 'out' indica uma mensagem do usuário, 'in' indica do bot
                     previousSender = lastBubbleContainer.classList.contains('out') ? 'user' : 'bot';
                 }
             }
@@ -903,17 +987,21 @@
             const bubbleContainer = document.createElement('div');
             bubbleContainer.className = `bubble-container ${isOutgoing ? 'out' : 'in'}`;
 
-            // Adiciona a classe 'no-tail' se o remetente for o mesmo da mensagem anterior
             if (previousSender === currentSender) {
                 bubbleContainer.classList.add('no-tail');
             }
-            // --- FIM DA CORREÇÃO ---
-
 
             const bubble = document.createElement('div');
             bubble.className = `p-1 rounded-lg shadow max-w-xs lg:max-w-md ${isOutgoing ? 'message-out' : 'message-in'}`;
 
-            if (type === 'audio' && audioUrl) {
+            // --- ADIÇÃO INICIADA: Lógica para renderizar o embed ---
+            if (type === 'embed' && embedData && embedData.code) {
+                const embedElement = createEmbedElement(embedData);
+                bubble.appendChild(embedElement);
+                bubble.classList.add('p-1', 'overflow-hidden');
+            } 
+            // --- ADIÇÃO FINALIZADA ---
+            else if (type === 'audio' && audioUrl) {
                 const audioPlayer = document.createElement('div');
                 audioPlayer.className = 'audio-player w-full items-center p-1';
                 const playButton = document.createElement('button');
@@ -1050,7 +1138,7 @@
             if (message) {
                 const textElement = document.createElement('p');
                 textElement.className = 'break-words px-1';
-                if (imageUrl || audioUrl || videoUrl) textElement.classList.add('mt-1');
+                if (imageUrl || audioUrl || videoUrl || (embedData && embedData.code)) textElement.classList.add('mt-1');
                 textElement.innerHTML = message;
                 bubble.appendChild(textElement);
             }
