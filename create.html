@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Construtor de Fluxo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
@@ -623,8 +623,9 @@
         <p class="text-gray-400 text-lg"><i class="fas fa-spinner fa-spin mr-2"></i>Verificando permissões...</p>
     </div>
 
+    <!-- [ALTERADO] Removida a classe de cor de fundo fixa -->
     <div id="toast-notification"
-        class="fixed top-20 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg z-[9999] opacity-0 transition-opacity duration-300 pointer-events-none">
+        class="fixed top-20 left-1/2 -translate-x-1/2 text-white px-6 py-3 rounded-lg shadow-lg z-[9999] opacity-0 transition-opacity duration-300 pointer-events-none">
         <p id="toast-message"></p>
     </div>
     <header class="bg-white dark:bg-gray-800 shadow-md z-30">
@@ -813,7 +814,7 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 userId = user.uid;
-                handleAuthorization(); 
+                handleAuthorization();
             } else {
                 navigateToDashboard();
             }
@@ -822,7 +823,7 @@
         async function handleAuthorization() {
             const urlParams = new URLSearchParams(window.location.search);
             const flowId = urlParams.get('flowId');
-            const isPremiumUser = false; 
+            const isPremiumUser = false;
 
             if (!flowId) {
                 navigateToDashboard('?error=invalid_flow');
@@ -859,20 +860,19 @@
                 }
             }
         }
-        
-        // [ALTERADO] Função agora também gerencia o estado do botão de salvar/publicar
+
         function loadExistingFlow(flowId, flowData) {
             currentFlowId = flowId;
             originalFlowId = flowId;
             nodes = flowData.nodes || [];
             connections = flowData.connections || [];
             botSettings = flowData.settings || {};
-            currentFlowStatus = flowData.status || 'rascunho'; // Carrega o status
+            currentFlowStatus = flowData.status || 'rascunho';
 
             document.getElementById('auth-blocker').style.display = 'none';
 
             updateSettingsUI();
-            updateSaveButtonState(); // Atualiza o botão com base no status
+            updateSaveButtonState();
             centerView();
             renderAll();
         }
@@ -923,11 +923,11 @@
         let dragInfo = { isDragging: false, startX: 0, startY: 0, nodeOffsetX: 0, nodeOffsetY: 0, draggedType: null };
         let currentFlowId = null;
         let originalFlowId = null;
-        let currentFlowStatus = 'rascunho'; // [NOVO] Variável para guardar o status
+        let currentFlowStatus = 'rascunho';
         let draggedGroupItemInfo = null;
         let tempSvgLine = null;
         let lastHoveredNodeEl = null;
-        let lastCaretPos = {}; 
+        let lastCaretPos = {};
         let dropTargetInfo = { parentId: null, index: -1 };
         let monacoEditorInstance = null;
 
@@ -955,7 +955,7 @@
             if (panDelta.x !== 0 || panDelta.y !== 0) {
                 pan.x += panDelta.x;
                 pan.y += panDelta.y;
-                panDelta = { x: 0, y: 0 }; 
+                panDelta = { x: 0, y: 0 };
                 applyTransform();
             }
 
@@ -1045,7 +1045,7 @@
 
             let contentHTML = '';
             if (node.type === 'group') {
-                contentHTML = '<div class="space-y-1 node-group-content">'; 
+                contentHTML = '<div class="space-y-1 node-group-content">';
                 (node.data.children || []).forEach(childId => {
                     const childNode = nodes.find(n => n.id === childId);
                     if (childNode) {
@@ -1407,7 +1407,7 @@
             const defaultData = {
                 message: { text: 'Nova mensagem...' },
                 image: { text: 'Legenda da imagem...', url: '' },
-                audio: { text: 'Descrição do áudio...', url: '' },
+                audio: { text: '', url: '' },
                 video: { text: 'Descrição do vídeo...', url: '' },
                 'http-request': { method: 'GET', url: '', headers: [{ key: '', value: '' }], body: '', responseMappings: [{ path: 'datajsonvalue', variable: 'response' }] },
                 buttons: { text: 'Escolha uma opção:', buttons: [{ label: 'Botão 1', target: null }] },
@@ -1564,7 +1564,7 @@
                         startY: e.clientY,
                         nodeOffsetX: e.clientX - nodeEl.getBoundingClientRect().left,
                         nodeOffsetY: e.clientY - nodeEl.getBoundingClientRect().top,
-                        draggedType: node.type 
+                        draggedType: node.type
                     };
                     activeNodeElement = nodeEl;
                     activeNodeElement.classList.add('dragging');
@@ -1784,7 +1784,7 @@
 
                 const inputTypeSelect = document.getElementById('node-input-type');
                 if (inputTypeSelect) {
-                    inputTypeSelect.value = node.data.inputType || 'text'; 
+                    inputTypeSelect.value = node.data.inputType || 'text';
                     inputTypeSelect.addEventListener('change', (e) => updateNodeData('inputType', e.target.value));
                 }
             }
@@ -1928,7 +1928,7 @@
         });
         canvasContainer.addEventListener('touchstart', (e) => {
             if (e.target === canvas) { isPanning = true; lastTouch = e.touches[0]; canvasContainer.classList.add('panning'); }
-        });
+        }, { passive: true });
 
         document.addEventListener('mousemove', (e) => {
             if (isPanning) {
@@ -1998,7 +1998,7 @@
 
                     if (groupNodeEl && droppedNodeData) {
                         if (nodeHasMultipleOutputs(droppedNodeData.type)) {
-                            showToast("Blocos com múltiplas saídas não podem ser adicionados a um grupo.");
+                            showToast("Blocos com múltiplas saídas não podem ser adicionados a um grupo.", 'error');
                         } else {
                             const groupNode = nodes.find(n => n.id === groupNodeEl.id);
                             if (groupNode) {
@@ -2194,11 +2194,11 @@
 
             if (type && dropTargetInfo.parentId) {
                 if (nodeHasMultipleOutputs(type)) {
-                    showToast("Blocos com múltiplas saídas não podem ser adicionados a um grupo.");
+                    showToast("Blocos com múltiplas saídas não podem ser adicionados a um grupo.", 'error');
                 } else {
                     const parentNode = nodes.find(n => n.id === dropTargetInfo.parentId);
                     if (parentNode) {
-                        const defaultData = { message: { text: 'Nova mensagem...' }, image: { text: 'Legenda da imagem...', url: '' }, audio: { text: 'Descrição do áudio...', url: '' }, video: { text: 'Descrição do vídeo...', url: '' }, 'http-request': { method: 'GET', url: '', headers: [{ key: '', value: '' }], body: '', responseMappings: [{ path: 'datajsonvalue', variable: 'response' }] }, buttons: { text: 'Escolha uma opção:', buttons: [{ label: 'Botão 1', target: null }] }, delay: { delay: 2 }, input: { text: 'Qual é o seu nome?', variableName: 'nome' }, group: { title: 'Novo Grupo', children: [] }, redirect: { url: 'https://', openInNewTab: true }, condition: { variable: '', operator: '==', value: '' }, embed: { embedCode: '', height: 400 } };
+                        const defaultData = { message: { text: 'Nova mensagem...' }, image: { text: 'Legenda da imagem...', url: '' }, audio: { text: '', url: '' }, video: { text: 'Descrição do vídeo...', url: '' }, 'http-request': { method: 'GET', url: '', headers: [{ key: '', value: '' }], body: '', responseMappings: [{ path: 'datajsonvalue', variable: 'response' }] }, buttons: { text: 'Escolha uma opção:', buttons: [{ label: 'Botão 1', target: null }] }, delay: { delay: 2 }, input: { text: 'Qual é o seu nome?', variableName: 'nome' }, group: { title: 'Novo Grupo', children: [] }, redirect: { url: 'https://', openInNewTab: true }, condition: { variable: '', operator: '==', value: '' }, embed: { embedCode: '', height: 400 } };
                         const newNode = { id: `node_${Date.now()}`, type, data: { ...(defaultData[type] || {}) } };
                         nodes.push(newNode);
                         if (!parentNode.data.children) parentNode.data.children = [];
@@ -2227,20 +2227,19 @@
                 .replace(/[^a-z0-9-]/g, '');
         }
 
-        // [ALTERADO] Função agora inclui o status ao salvar
         async function saveFlowToFirebase() {
             if (!db || !userId) {
-                showToast("Não é possível salvar. Usuário não autenticado.");
+                showToast("Não é possível salvar. Usuário não autenticado.", 'error');
                 return false;
             }
 
-            const flowData = { 
-                nodes, 
-                connections, 
-                settings: botSettings, 
-                owner: userId, 
-                status: currentFlowStatus, // Inclui o status atual
-                lastUpdated: new Date().toISOString() 
+            const flowData = {
+                nodes,
+                connections,
+                settings: botSettings,
+                owner: userId,
+                status: currentFlowStatus,
+                lastUpdated: new Date().toISOString()
             };
 
             const flowRef = ref(db, `published_bots/${currentFlowId}`);
@@ -2253,13 +2252,12 @@
             }
         }
 
-        // [ALTERADO] Lógica do botão de salvar/publicar
         saveFlowBtn.addEventListener('click', async () => {
             saveFlowBtn.disabled = true;
             const isPublishing = currentFlowStatus === 'rascunho';
-            
+
             if (isPublishing) {
-                currentFlowStatus = 'ativo'; // Muda o status para 'ativo'
+                currentFlowStatus = 'ativo';
                 saveFlowBtn.innerHTML = `Publicando... <i class="fas fa-spinner fa-spin ml-2"></i>`;
             } else {
                 saveFlowBtn.innerHTML = `Salvando... <i class="fas fa-spinner fa-spin ml-2"></i>`;
@@ -2269,22 +2267,21 @@
 
             if (success) {
                 if (isPublishing) {
-                    showToast("Funil publicado com sucesso!");
+                    showToast("Funil publicado com sucesso!", 'success');
                 } else {
-                    showToast("Alterações salvas!");
+                    showToast("Alterações salvas!", 'success');
                 }
             } else {
-                showToast("Erro ao salvar o funil.");
+                showToast("Erro ao salvar o funil.", 'error');
                 if (isPublishing) {
-                    currentFlowStatus = 'rascunho'; // Reverte o status em caso de falha
+                    currentFlowStatus = 'rascunho';
                 }
             }
-            
+
             saveFlowBtn.disabled = false;
-            updateSaveButtonState(); // Atualiza o texto do botão para o estado correto
+            updateSaveButtonState();
         });
-        
-        // [NOVO] Função para atualizar a aparência do botão de salvar
+
         function updateSaveButtonState() {
             if (currentFlowStatus === 'ativo') {
                 saveFlowBtn.innerHTML = `Salvar <i class="fas fa-save ml-2"></i>`;
@@ -2454,7 +2451,7 @@
             try {
                 await remove(analyticsRef);
                 hideConfirmationModal();
-                loadAnalytics(); 
+                loadAnalytics();
             } catch (error) {
                 console.error("Erro ao apagar analytics:", error);
                 alert("Falha ao apagar os dados.");
@@ -2462,10 +2459,19 @@
             }
         }
 
-        function showToast(message) {
+        // [ALTERADO] Função agora aceita um tipo para definir a cor
+        function showToast(message, type = 'error') {
             const toast = document.getElementById('toast-notification');
             const toastMessage = document.getElementById('toast-message');
             if (!toast || !toastMessage) return;
+
+            toast.classList.remove('bg-red-600', 'bg-green-600');
+
+            if (type === 'success') {
+                toast.classList.add('bg-green-600');
+            } else {
+                toast.classList.add('bg-red-600');
+            }
 
             toastMessage.textContent = message;
             toast.classList.remove('opacity-0');
@@ -2505,13 +2511,13 @@
             headerFlowIdStatus.textContent = '';
             const newId = sanitizeFlowId(headerFlowIdInput.value);
             if (newId === originalFlowId) {
-                headerFlowIdInput.value = originalFlowId; 
+                headerFlowIdInput.value = originalFlowId;
                 return;
             };
 
             const success = await saveFlowToFirebase();
             if (!success) {
-                headerFlowIdInput.value = originalFlowId; 
+                headerFlowIdInput.value = originalFlowId;
             }
         });
 
@@ -2541,7 +2547,7 @@
         populateAddNodePanel();
         setupAccordion('#settings-modal .accordion-item');
         document.addEventListener('contextmenu', function (e) {
-            e.preventDefault(); 
+            e.preventDefault();
         });
     </script>
 </body>
