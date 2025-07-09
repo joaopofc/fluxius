@@ -13,6 +13,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #693FEA;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #0d0d0d;
@@ -23,7 +27,7 @@
             background: linear-gradient(315deg, #15151d, #1e1e2a);
             border-bottom: 1px solid #2a2a3c;
         }
-        
+
         .bot-card {
             background-color: #1c1c24;
             border: 1px solid #2f2f3a;
@@ -32,6 +36,7 @@
             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
             position: relative;
         }
+
         .bot-card:hover {
             transform: translateY(-5px);
             border-color: #7f56d9;
@@ -39,21 +44,65 @@
         }
 
         .new-bot-card {
-             background: linear-gradient(315deg, #4f46e5, #7c3aed);
+            background: linear-gradient(315deg, #4f46e5, #7c3aed);
         }
-         .new-bot-card:hover {
+
+        .new-bot-card:hover {
             box-shadow: 0 0 15px #7c3aed;
         }
-        
-        #logout-btn {
-            color: #a1a1aa;
-            background-color: #1c1c24;
-            border: 1px solid #3f3f46;
+
+        .new-bot-card.locked {
+            background: linear-gradient(315deg, #373747, #2a2a3c);
+            cursor: pointer;
         }
-         #logout-btn:hover {
-            background-color: #27272a;
+
+        .new-bot-card.locked:hover {
+            border-color: #f59e0b;
+            box-shadow: 0 0 12px #f59e0b;
         }
-        
+
+        /* [NOVO] Estilos para a etiqueta de status do funil */
+        .status-badge {
+            position: absolute;
+            top: 0.75rem;
+            padding: 0.15rem 0.65rem;
+            border-radius: 9999px;
+            font-size: 0.65rem;
+            font-weight: bolder;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-badge.ativo {
+            /* background-color: var(--primary-color); */
+            background-color: #16e95c;
+            color: rgb(0, 0, 0);
+            box-shadow: 0 0 8px  rgba(105, 63, 234, 0.5);
+        }
+
+        .status-badge.rascunho {
+            display: none;
+            /* Oculta por padrão */
+            background-color: #4b5563;
+            /* Cinza */
+            color: #d1d5db;
+        }
+
+        /* User Menu Styles */
+        .plan-badge {
+            letter-spacing: 0.05em;
+        }
+
+        .plan-badge.free {
+            background-color: #4b5563;
+            color: #d1d5db;
+        }
+
+        .plan-badge.premium {
+            background: linear-gradient(315deg, var(--primary-color), #7c3aed);
+            color: white;
+        }
+
         /* Card Menu */
         .card-menu-btn {
             position: absolute;
@@ -63,13 +112,15 @@
             width: 2rem;
             height: 2rem;
             border-radius: 9999px;
-            background-color: rgba(0,0,0,0.2);
+            background-color: rgba(0, 0, 0, 0.2);
             color: #a1a1aa;
         }
+
         .card-menu-btn:hover {
-            background-color: rgba(0,0,0,0.4);
+            background-color: rgba(0, 0, 0, 0.4);
             color: #e5e7eb;
         }
+
         .card-menu {
             position: absolute;
             top: 3rem;
@@ -78,9 +129,10 @@
             background-color: #27272a;
             border: 1px solid #3f3f46;
             border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             width: 160px;
         }
+
         .card-menu button {
             display: flex;
             align-items: center;
@@ -91,18 +143,19 @@
             color: #d4d4d8;
             text-align: left;
         }
-         .card-menu button:hover {
-             background-color: #3f3f46;
-         }
-         .card-menu .delete-btn:hover {
+
+        .card-menu button:hover {
+            background-color: #3f3f46;
+        }
+
+        .card-menu .delete-btn:hover {
             background-color: #ef4444;
             color: white;
-         }
-
+        }
 
         /* Auth Page Styles */
         #auth-page {
-             background-color: #0d0d0d;
+            background-color: #0d0d0d;
         }
 
         .auth-panel {
@@ -116,136 +169,240 @@
         .modal-tab {
             color: #6b7280;
         }
+
         .modal-tab.active {
             border-color: #7f56d9;
             color: #7f56d9;
         }
+
         .auth-input {
             background-color: #1f1f28;
             border: 1px solid #333;
             color: #f3f4f6;
         }
+
         .auth-input:focus {
             outline: none;
             box-shadow: none;
             border-color: #7f56d9;
             --tw-ring-color: transparent;
         }
-        
+
         .auth-button {
-             background: linear-gradient(315deg, #4f46e5, #7c3aed);
-             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+            background: linear-gradient(315deg, #4f46e5, #7c3aed);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
         }
-         .auth-button:hover {
+
+        .auth-button:hover {
             filter: brightness(1.2);
-         }
+        }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.8);
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .modal-content {
+            background-color: #14141d;
+            border: 1px solid #3f3f46;
+            transform: scale(0.95);
+            opacity: 0;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .modal-container.flex .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        /* Pricing Modal Styles */
+        .pricing-card {
+            background-color: #1c1c24;
+            border: 1px solid #3f3f46;
+            border-radius: 12px;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .pricing-card.popular {
+            border-color: #7f56d9;
+            box-shadow: 0 0 25px rgba(127, 86, 217, 0.5);
+        }
+
+        .popular-badge {
+            background-color: #7f56d9;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            position: absolute;
+            top: -0.8rem;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+
+        .pricing-button {
+            background-color: #374151;
+            color: #d1d5db;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .pricing-button:hover {
+            background-color: #4b5563;
+            color: white;
+        }
+
+        .pricing-card.popular .pricing-button {
+            background: linear-gradient(315deg, #6d28d9, #8b5cf6);
+        }
+
+        .pricing-card.popular .pricing-button:hover {
+            filter: brightness(1.2);
+        }
     </style>
 </head>
 
 <body class="bg-gray-100 dark:bg-gray-900">
 
-    <!-- Auth Page -->
-    <div id="auth-page" class="fixed inset-0 z-40 hidden">
-        <div class="w-full flex md:grid md:grid-cols-2">
-            <!-- Left Panel -->
-            <div class="auth-panel hidden md:flex flex-col items-center justify-center p-12 text-white">
-                 <h1 class="text-4xl font-bold mb-4">Bem-vindo(a) de volta!</h1>
-                 <p class="text-lg text-gray-400 text-center">Acesse sua conta para gerenciar seus funis de automação e continuar de onde parou.</p>
-            </div>
+    <div id="page-loader" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0d0d0d]">
+        <i class="fas fa-spinner fa-spin text-white text-4xl"></i>
+    </div>
 
-            <!-- Right Panel (Form) -->
+    <div id="auth-page" class="fixed inset-0 z-40 hidden">
+        <div class="w-full flex md:grid md:grid-cols-2 min-h-screen">
+            <div class="auth-panel hidden md:flex flex-col items-center justify-center p-12 text-white">
+                <h1 class="text-4xl font-bold mb-4">Bem-vindo(a) de volta!</h1>
+                <p class="text-lg text-gray-400 text-center">Acesse sua conta para gerenciar seus funis de automação e
+                    continuar de onde parou.</p>
+            </div>
             <div class="w-full flex items-center justify-center p-8 auth-form-container">
-                 <div class="w-full max-w-sm">
+                <div class="w-full max-w-sm">
                     <div class="md:hidden mb-8 text-center">
                         <h2 class="text-2xl font-bold text-white">Bem-vindo(a)</h2>
                         <p class="text-gray-400">Acesse sua conta</p>
                     </div>
-
-                    <!-- Tabs -->
                     <div class="flex border-b border-gray-700">
-                        <button id="login-tab-btn" class="modal-tab w-1/2 p-4 font-semibold border-b-2 active">Entrar</button>
-                        <button id="register-tab-btn" class="modal-tab w-1/2 p-4 font-semibold border-b-2" disabled>Registrar</button>
+                        <button id="login-tab-btn"
+                            class="modal-tab w-1/2 p-4 font-semibold border-b-2 active">Entrar</button>
+                        <button id="register-tab-btn"
+                            class="modal-tab w-1/2 p-4 font-semibold border-b-2">Registrar</button>
                     </div>
-
-                    <!-- Forms -->
                     <div class="pt-6">
                         <form id="login-form">
                             <div class="space-y-6">
                                 <div>
-                                    <label for="login-email" class="block text-sm font-medium text-gray-400">Email</label>
-                                    <input type="email" id="login-email" required class="auth-input rounded-md mt-1 block w-full px-3 py-2">
+                                    <label for="login-email"
+                                        class="block text-sm font-medium text-gray-400">Email</label>
+                                    <input type="email" id="login-email" required
+                                        class="auth-input rounded-md mt-1 block w-full px-3 py-2">
                                 </div>
                                 <div>
-                                    <label for="login-password" class="block text-sm font-medium text-gray-400">Senha</label>
-                                    <input type="password" id="login-password" required class="auth-input rounded-md mt-1 block w-full px-3 py-2">
+                                    <label for="login-password"
+                                        class="block text-sm font-medium text-gray-400">Senha</label>
+                                    <input type="password" id="login-password" required
+                                        class="auth-input rounded-md mt-1 block w-full px-3 py-2">
                                 </div>
                             </div>
-                            <button type="submit" class="auth-button w-full mt-8 py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white flex items-center justify-center">Entrar</button>
-                        <!-- </form>
+                            <button type="submit"
+                                class="auth-button w-full mt-8 py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white flex items-center justify-center">Entrar</button>
+                        </form>
                         <form id="register-form" class="hidden">
                             <div class="space-y-6">
-                                 <div>
-                                    <label for="register-email" class="block text-sm font-medium text-gray-400">Email</label>
-                                    <input type="email" id="register-email" required class="auth-input rounded-md mt-1 block w-full px-3 py-2">
+                                <div>
+                                    <label for="register-email"
+                                        class="block text-sm font-medium text-gray-400">Email</label>
+                                    <input type="email" id="register-email" required
+                                        class="auth-input rounded-md mt-1 block w-full px-3 py-2">
                                 </div>
                                 <div>
-                                    <label for="register-password" class="block text-sm font-medium text-gray-400">Senha (mínimo 6 caracteres)</label>
-                                    <input type="password" id="register-password" required class="auth-input rounded-md mt-1 block w-full px-3 py-2">
+                                    <label for="register-password" class="block text-sm font-medium text-gray-400">Senha
+                                        (mínimo 6 caracteres)</label>
+                                    <input type="password" id="register-password" required
+                                        class="auth-input rounded-md mt-1 block w-full px-3 py-2">
                                 </div>
                             </div>
-                             <button type="submit" class="auth-button w-full mt-8 py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white flex items-center justify-center">Criar Conta</button>
-                        </form> -->
-                         <p id="auth-error" class="text-red-500 text-xs mt-4 text-center h-4"></p>
+                            <button type="submit"
+                                class="auth-button w-full mt-8 py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white flex items-center justify-center">Criar
+                                Conta</button>
+                        </form>
+                        <p id="auth-error" class="text-red-500 text-xs mt-4 text-center h-4"></p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-
-    <!-- Dashboard Content -->
     <div id="dashboard-content" class="min-h-screen flex-col hidden">
         <header class="header-main z-30">
             <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-white">Meus Funis</h1>
-                <div class="flex items-center gap-4">
-                    <span id="user-email" class="text-sm text-gray-300"></span>
-                    <button id="logout-btn" class="px-4 py-2 text-sm font-medium rounded-lg">Sair</button>
+                <div class="relative" id="user-menu-container">
+                    <button id="user-menu-btn"
+                        class="flex items-center gap-2 bg-[#1c1c24] border border-[#3f3f46] rounded-full p-1 pr-3 transition-colors hover:bg-[#27272a]">
+                        <span id="user-plan-badge"
+                            class="plan-badge px-3 py-1 text-xs font-semibold rounded-full"></span>
+                        <img id="user-avatar" src="https://placehold.co/24x24/565656/white?text=User"
+                            class="w-6 h-6 rounded-full" alt="Avatar do usuário">
+                        <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                    </button>
+                    <div id="user-menu"
+                        class="absolute right-0 mt-2 w-56 origin-top-right bg-[#27272a] border border-[#3f3f46] rounded-md shadow-lg z-50 hidden">
+                        <div class="p-2">
+                            <div class="px-2 py-1">
+                                <p class="text-sm text-gray-300">Logado como</p>
+                                <p id="user-email-display" class="text-sm font-medium text-white truncate"></p>
+                            </div>
+                            <div class="border-t border-gray-600 my-1"></div>
+                            <button id="logout-btn"
+                                class="w-full text-left px-2 py-2 text-sm text-red-400 hover:bg-red-500/20 hover:text-red-300 rounded-md flex items-center gap-2">
+                                <i class="fas fa-sign-out-alt w-4"></i>
+                                <span>Sair</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
-
         <main class="flex-grow p-8" style="background: #070a10;">
-            <div id="bots-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                <div id="new-bot-card" class="bot-card new-bot-card text-white p-6 flex flex-col items-center justify-center text-center aspect-square cursor-pointer">
-                    <i class="fas fa-plus text-4xl mb-4"></i>
-                    <span class="text-lg font-semibold">Criar novo Funil</span>
+            <div id="bots-grid"
+                class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <div id="new-bot-card"
+                    class="bot-card text-white p-6 flex flex-col items-center justify-center text-center aspect-square cursor-wait opacity-50">
+                    <i class="fas fa-spinner fa-spin text-4xl"></i>
                 </div>
             </div>
         </main>
     </div>
-    
-    <!-- New Bot Creation Modal -->
-    <div id="new-bot-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4">
-        <div class="bg-[#1c1c24] border border-gray-700 rounded-lg shadow-xl w-full max-w-lg">
+
+    <!-- Modals -->
+    <div id="new-bot-modal"
+        class="modal-container fixed inset-0 modal-backdrop z-50 hidden items-center justify-center p-4">
+        <div class="modal-content rounded-lg shadow-xl w-full max-w-lg">
             <div class="p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-bold text-white">Criar um novo Funil</h2>
-                    <button id="close-new-bot-modal-btn" class="text-gray-400 text-2xl hover:text-white">&times;</button>
+                    <button data-close-modal="new-bot-modal"
+                        class="text-gray-400 text-2xl hover:text-white">&times;</button>
                 </div>
                 <div class="space-y-4">
-                    <button id="create-from-scratch-btn" class="w-full text-left p-4 rounded-lg flex items-center gap-4 transition-colors hover:bg-gray-800 border border-gray-700">
+                    <button id="create-from-scratch-btn"
+                        class="w-full text-left p-4 rounded-lg flex items-center gap-4 transition-colors hover:bg-gray-800 border border-gray-700">
                         <i class="fas fa-wrench text-xl text-indigo-400"></i>
                         <div>
                             <h3 class="font-semibold text-white">Começar do zero</h3>
-                            <p class="text-sm text-gray-400">Comece com um fluxo em branco para construir sua automação.</p>
+                            <p class="text-sm text-gray-400">Comece com um fluxo em branco para construir sua automação.
+                            </p>
                         </div>
                     </button>
-                    <button id="import-from-file-btn" class="w-full text-left p-4 rounded-lg flex items-center gap-4 transition-colors hover:bg-gray-800 border border-gray-700">
+                    <button id="import-from-file-btn"
+                        class="w-full text-left p-4 rounded-lg flex items-center gap-4 transition-colors hover:bg-gray-800 border border-gray-700">
                         <i class="fas fa-upload text-xl text-indigo-400"></i>
                         <div>
                             <h3 class="font-semibold text-white">Importar um arquivo</h3>
-                            <p class="text-sm text-gray-400">Importe um arquivo .json para carregar um fluxo existente.</p>
+                            <p class="text-sm text-gray-400">Importe um arquivo .json para carregar um fluxo existente.
+                            </p>
                         </div>
                     </button>
                     <input type="file" id="import-file-input" class="hidden" accept=".json">
@@ -254,36 +411,136 @@
         </div>
     </div>
 
+    <div id="upgrade-modal"
+        class="modal-container fixed inset-0 modal-backdrop z-50 hidden items-center justify-center p-4">
+        <div class="modal-content rounded-xl shadow-xl w-full h-full max-w-3xl text-center">
+            <div class="p-8">
+                <h2 class="text-3xl font-bold text-white mb-2">Aproveite o Desconto de Lançamento!</h2>
+                <p class="text-gray-400 mb-8">Desbloqueie todo o potencial da nossa plataforma com funis ilimitados.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="pricing-card p-6 text-left flex flex-col">
+                        <h3 class="text-xl font-semibold text-white mb-3">Mensal</h3>
+                        <div class="mb-2">
+                            <span class="text-4xl font-bold text-white">R$ 19<span class="text-2xl">,90</span></span>
+                            <span class="text-gray-400">/mês</span>
+                        </div>
+                        <p class="text-gray-500 line-through mb-4">De R$ 49,90</p>
+                        <ul class="space-y-1 text-gray-300 flex-grow">
+                            <li class="flex items-center gap-3"><i
+                                    class="fas fa-check-circle text-green-500"></i><span>Funis ilimitados</span></li>
+                            <li class="flex items-center gap-3"><i
+                                    class="fas fa-check-circle text-green-500"></i><span>Importe e exporte</span></li>
+                            <li class="flex items-center gap-3"><i
+                                    class="fas fa-check-circle text-green-500"></i><span>Acesso a templates</span></li>
+                        </ul>
+                        <button
+                            class="upgrade-plan-btn pricing-button w-full py-3 mt-8 rounded-md font-semibold">Assinar
+                            plano Mensal</button>
+                    </div>
+                    <div class="pricing-card popular p-6 text-left relative flex flex-col">
+                        <div class="popular-badge">Mais Popular</div>
+                        <h3 class="text-xl font-semibold text-white mb-3">Anual</h3>
+                        <div class="mb-2">
+                            <span class="text-4xl font-bold text-white">R$ 97<span class="text-2xl">,00</span></span>
+                            <span class="text-gray-400">/ano</span>
+                        </div>
+                        <p class="text-gray-500 line-through">De R$ 497,00</p>
+                        <span
+                            class="text-xs font-bold text-yellow-400 bg-yellow-500/20 rounded-full px-2 py-1 self-start mb-6">MAIS
+                            DE 80% DE DESCONTO</span>
+                        <ul class="space-y-1 text-gray-300 flex-grow">
+                            <li class="flex items-center gap-3"><i
+                                    class="fas fa-check-circle text-green-500"></i><span>Funis ilimitados</span></li>
+                            <li class="flex items-center gap-3"><i
+                                    class="fas fa-check-circle text-green-500"></i><span>Importe e exporte</span></li>
+                            <li class="flex items-center gap-3"><i
+                                    class="fas fa-check-circle text-green-500"></i><span>Acesso a templates</span></li>
+                        </ul>
+                        <button
+                            class="upgrade-plan-btn pricing-button w-full py-3 mt-8 rounded-md font-semibold">Assinar
+                            plano Anual</button>
+                    </div>
+                </div>
+                <button data-close-modal="upgrade-modal" class="mt-8 text-gray-500 hover:text-white text-sm">Agora
+                    não</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="custom-alert-modal"
+        class="modal-container fixed inset-0 modal-backdrop z-50 hidden items-center justify-center p-4">
+        <div class="modal-content rounded-lg shadow-xl w-full max-w-sm">
+            <div class="p-6 text-center">
+                <h3 id="custom-alert-title" class="text-lg font-bold text-white mb-2"></h3>
+                <p id="custom-alert-message" class="text-sm text-gray-400 mb-6"></p>
+                <div id="custom-alert-buttons" class="flex justify-center gap-4"></div>
+            </div>
+        </div>
+    </div>
+
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getDatabase, ref, get, set, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getDatabase, ref, get, set, remove, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
         import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const firebaseConfig = { apiKey: "AIzaSyCOAUpRQbLmLO4tzzK6xVeGxGO7eDF4NVQ", authDomain: "cmdadteste-hoje.firebaseapp.com", databaseURL: "https://cmdadteste-hoje-default-rtdb.firebaseio.com", projectId: "cmdadteste-hoje", storageBucket: "cmdadteste-hoje.appspot.com", messagingSenderId: "831622336654", appId: "1:831622336654:web:a393593df3eb51702cf9df" };
 
         let db, auth;
+        let currentUserBotCount = 0;
+        let isPremiumUser = false;
+
+        const pageLoader = document.getElementById('page-loader');
         const authPage = document.getElementById('auth-page');
         const dashboardContent = document.getElementById('dashboard-content');
-        
+
         try {
             const app = initializeApp(firebaseConfig);
             db = getDatabase(app);
             auth = getAuth(app);
         } catch (e) {
             console.error("Firebase initialization error:", e);
+            pageLoader.style.display = 'none';
             authPage.innerHTML = `<p class="text-red-500 text-center w-full">Erro na inicialização.</p>`;
             authPage.style.display = 'flex';
         }
 
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
+                const userRef = ref(db, `users/${user.uid}`);
+                const snapshot = await get(userRef);
+                if (snapshot.exists()) {
+                    isPremiumUser = snapshot.val().plan === 'premium';
+                } else {
+                    isPremiumUser = false;
+                    await set(userRef, { email: user.email, plan: 'free' });
+                }
+
+                pageLoader.style.display = 'none';
                 authPage.style.display = 'none';
                 dashboardContent.style.display = 'flex';
-                document.getElementById('user-email').textContent = user.email;
+
+                const userPlanBadge = document.getElementById('user-plan-badge');
+                const userEmailDisplay = document.getElementById('user-email-display');
+                if (userEmailDisplay) userEmailDisplay.textContent = user.email;
+                if (userPlanBadge) {
+                    if (isPremiumUser) {
+                        userPlanBadge.textContent = 'Premium';
+                        userPlanBadge.classList.add('premium');
+                        userPlanBadge.classList.remove('free');
+                    } else {
+                        userPlanBadge.textContent = 'Free';
+                        userPlanBadge.classList.add('free');
+                        userPlanBadge.classList.remove('premium');
+                    }
+                }
+
                 localStorage.setItem('userEmail', user.email);
                 localStorage.setItem('ownerId', user.uid);
-                loadUserBots(user.uid);
+                listenToUserBots(user.uid);
+                handleUrlErrors();
             } else {
+                pageLoader.style.display = 'none';
                 authPage.style.display = 'flex';
                 dashboardContent.style.display = 'none';
                 localStorage.removeItem('userEmail');
@@ -292,126 +549,160 @@
             }
         });
 
-        async function loadUserBots(userId) {
-            const botsGrid = document.getElementById('bots-grid');
-            clearBotsGrid();
-            const loadingHtml = `<div id="loading-indicator" class="text-center text-gray-400 col-span-full"><i class="fas fa-spinner fa-spin mr-2"></i>Carregando seus funis...</div>`;
-            botsGrid.insertAdjacentHTML('beforeend', loadingHtml);
-            
-            const botsRef = ref(db, 'published_bots');
-            try {
-                const snapshot = await get(botsRef);
-                const loadingIndicator = document.getElementById('loading-indicator');
-                if (loadingIndicator) loadingIndicator.remove();
+        function handleUrlErrors() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
 
-                if (snapshot.exists()) {
-                    const allBots = snapshot.val();
-                    let userHasBots = false;
+            if (error) {
+                let title = "Aviso";
+                let message = "Ocorreu um erro inesperado.";
 
-                    Object.entries(allBots).forEach(([botId, botData]) => {
-                        if (botData.owner === userId) {
-                            userHasBots = true;
-                            const botCard = createBotCard(botId, botData);
-                            botsGrid.appendChild(botCard); // FIX: Appending ensures they come after the "New" card
-                        }
-                    });
-
-                    if (!userHasBots) {
-                        botsGrid.insertAdjacentHTML('beforeend', `<p class="text-gray-400 col-span-full text-center">Você ainda não criou nenhum funil.</p>`);
-                    }
-                } else {
-                        botsGrid.insertAdjacentHTML('beforeend', `<p class="text-gray-400 col-span-full text-center">Nenhum funil encontrado.</p>`);
+                switch (error) {
+                    case 'limit_reached':
+                        title = "Limite Atingido";
+                        message = "Você atingiu o limite de 1 funil no plano gratuito. Apague um funil existente ou faça upgrade para criar mais.";
+                        break;
+                    case 'unauthorized':
+                        title = "Acesso Negado";
+                        message = "Você não tem permissão para acessar o funil solicitado.";
+                        break;
+                    case 'creation_failed':
+                    case 'invalid_flow':
+                        title = "Erro de Acesso";
+                        message = "Não foi possível acessar o construtor. Por favor, crie ou edite funis diretamente pelo dashboard.";
+                        break;
                 }
-            } catch (error) {
-                console.error("Error loading bots:", error);
-                const loadingIndicator = document.getElementById('loading-indicator');
-                if(loadingIndicator) loadingIndicator.textContent = "Falha ao carregar os funis.";
+
+                showCustomAlert(title, message, [{ text: "Entendido" }]);
+                history.replaceState(null, '', window.location.pathname);
             }
         }
-        
+
+        function listenToUserBots(userId) {
+            const botsRef = ref(db, 'published_bots');
+            const botsGrid = document.getElementById('bots-grid');
+
+            onValue(botsRef, (snapshot) => {
+                clearBotsGrid();
+                let userBots = [];
+                if (snapshot.exists()) {
+                    const allBots = snapshot.val();
+                    Object.entries(allBots).forEach(([botId, botData]) => {
+                        if (botData.owner === userId) {
+                            userBots.push({ id: botId, data: botData });
+                        }
+                    });
+                }
+
+                currentUserBotCount = userBots.length;
+                updateNewBotCardState();
+
+                if (userBots.length > 0) {
+                    userBots.forEach(bot => {
+                        const botCard = createBotCard(bot.id, bot.data);
+                        botsGrid.appendChild(botCard);
+                    });
+                } else {
+                    botsGrid.insertAdjacentHTML('beforeend', `<p class="text-gray-400 col-span-full text-center">Você ainda não criou nenhum funil.</p>`);
+                }
+            }, (error) => {
+                console.error("Error listening to bots:", error);
+                botsGrid.insertAdjacentHTML('beforeend', `<p class="text-red-500 col-span-full text-center">Falha ao carregar os funis.</p>`);
+            });
+        }
+
         function clearBotsGrid() {
             const botsGrid = document.getElementById('bots-grid');
-            // Select all children of the grid that are not the "new bot" card
             const existingBotCards = botsGrid.querySelectorAll('.bot-card:not(#new-bot-card)');
             existingBotCards.forEach(card => card.remove());
-
-            // Remove any leftover text nodes (like "You have no funnels yet")
             const infoText = botsGrid.querySelector('p');
             if (infoText) infoText.remove();
         }
 
+        function updateNewBotCardState() {
+            const newBotCard = document.getElementById('new-bot-card');
+            const limitReached = currentUserBotCount >= 1 && !isPremiumUser;
 
+            newBotCard.classList.remove('cursor-wait', 'opacity-50');
+
+            if (limitReached) {
+                newBotCard.innerHTML = `
+                    <i class="fas fa-lock text-4xl mb-4 text-yellow-400"></i>
+                    <span class="text-lg font-semibold">Criar mais Funis</span>
+                    <span class="text-xs font-medium text-yellow-500 mt-1">Exclusivo do Plano Premium</span>
+                `;
+                newBotCard.classList.add('locked');
+                newBotCard.classList.remove('new-bot-card');
+            } else {
+                newBotCard.innerHTML = `
+                    <i class="fas fa-plus text-4xl mb-4"></i>
+                    <span class="text-lg font-semibold">Criar novo Funil</span>
+                `;
+                newBotCard.classList.remove('locked');
+                newBotCard.classList.add('new-bot-card');
+            }
+        }
+
+        // [ALTERADO] Função agora lê o status para criar a badge
         function createBotCard(botId, botData) {
             const botName = botData.settings?.botName || botId;
+            const status = botData.status || 'rascunho'; // Padrão para 'rascunho' se não existir
             const card = document.createElement('div');
             card.id = `card-${botId}`;
             card.className = "bot-card p-6 flex flex-col items-center justify-center text-center aspect-square cursor-pointer";
-            
+
+            const statusBadgeHTML = `<div class="status-badge ${status}">${status}</div>`;
+
             card.innerHTML = `
+                ${statusBadgeHTML}
                 <button class="card-menu-btn"><i class="fas fa-ellipsis-v"></i></button>
                 <div class="card-menu hidden">
                     <button class="duplicate-btn"><i class="fas fa-copy w-5"></i>Duplicar</button>
                     <button class="export-btn"><i class="fas fa-download w-5"></i>Exportar</button>
                     <button class="delete-btn text-red-500"><i class="fas fa-trash w-5"></i>Apagar</button>
                 </div>
-                <div class="flex-grow flex flex-col items-center justify-center">
+                <div class="flex-grow flex flex-col items-center justify-center pt-4">
                      <i class="fas fa-wrench text-4xl mb-4 text-gray-500"></i>
                      <span class="text-lg font-semibold text-white break-all">${botName}</span>
                 </div>
             `;
-            
-            // --- Event Listeners ---
+
             card.addEventListener('click', (e) => {
-                 if (!e.target.closest('.card-menu-btn') && !e.target.closest('.card-menu')) {
+                if (!e.target.closest('.card-menu-btn') && !e.target.closest('.card-menu')) {
                     window.location.href = `create.html?flowId=${botId}`;
                 }
             });
 
             const menuBtn = card.querySelector('.card-menu-btn');
             const menu = card.querySelector('.card-menu');
-            
-            menuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                menu.classList.toggle('hidden');
-            });
 
-            card.querySelector('.duplicate-btn').addEventListener('click', (e) => {
-                e.stopPropagation();
-                duplicateBot(botId);
-                menu.classList.add('hidden');
-            });
-            card.querySelector('.export-btn').addEventListener('click', (e) => {
-                e.stopPropagation();
-                exportBot(botId, botData);
-                menu.classList.add('hidden');
-            });
-             card.querySelector('.delete-btn').addEventListener('click', (e) => {
-                e.stopPropagation();
-                deleteBot(botId, botName);
-                menu.classList.add('hidden');
-            });
-
+            menuBtn.addEventListener('click', (e) => { e.stopPropagation(); menu.classList.toggle('hidden'); });
+            card.querySelector('.duplicate-btn').addEventListener('click', (e) => { e.stopPropagation(); duplicateBot(botId); menu.classList.add('hidden'); });
+            card.querySelector('.export-btn').addEventListener('click', (e) => { e.stopPropagation(); exportBot(botId, botData); menu.classList.add('hidden'); });
+            card.querySelector('.delete-btn').addEventListener('click', (e) => { e.stopPropagation(); deleteBot(botId, botName); menu.classList.add('hidden'); });
 
             return card;
         }
 
         async function duplicateBot(botId) {
+            if (currentUserBotCount >= 1 && !isPremiumUser) {
+                showModal('upgrade-modal');
+                return;
+            }
             const botRef = ref(db, `published_bots/${botId}`);
             try {
                 const snapshot = await get(botRef);
                 if (snapshot.exists()) {
                     const botData = snapshot.val();
                     const newFlowId = generateFlowId();
-                    
                     botData.settings.botName = `${botData.settings.botName || 'Bot'} (Cópia)`;
-
+                    botData.status = 'rascunho'; // Duplicatas são sempre rascunhos
                     const newBotRef = ref(db, `published_bots/${newFlowId}`);
                     await set(newBotRef, botData);
-                    loadUserBots(auth.currentUser.uid); // Refresh dashboard
                 }
             } catch (error) {
                 console.error("Erro ao duplicar o funil:", error);
-                alert("Não foi possível duplicar o funil.");
+                showCustomAlert("Erro", "Não foi possível duplicar o funil.", [{ text: "OK" }]);
             }
         }
 
@@ -419,7 +710,6 @@
             const dataStr = JSON.stringify(botData, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
             const exportFileDefaultName = `${botData.settings?.botName || botId}.json`;
-
             const linkElement = document.createElement('a');
             linkElement.setAttribute('href', dataUri);
             linkElement.setAttribute('download', exportFileDefaultName);
@@ -427,19 +717,26 @@
         }
 
         async function deleteBot(botId, botName) {
-            if (confirm(`Tem certeza que deseja apagar o funil "${botName}"? Esta ação não pode ser desfeita.`)) {
-                const botRef = ref(db, `published_bots/${botId}`);
-                try {
-                    await remove(botRef);
-                    document.getElementById(`card-${botId}`).remove();
-                } catch (error) {
-                    console.error("Erro ao apagar o funil:", error);
-                    alert("Não foi possível apagar o funil.");
-                }
-            }
+            showCustomAlert(
+                `Apagar Funil`,
+                `Tem certeza que deseja apagar o funil "${botName}"? Esta ação não pode ser desfeita.`,
+                [
+                    { text: "Cancelar", class: "bg-gray-600 hover:bg-gray-500" },
+                    {
+                        text: "Apagar", class: "bg-red-600 hover:bg-red-500", async callback() {
+                            const botRef = ref(db, `published_bots/${botId}`);
+                            try {
+                                await remove(botRef);
+                            } catch (error) {
+                                console.error("Erro ao apagar o funil:", error);
+                                showCustomAlert("Erro", "Não foi possível apagar o funil.", [{ text: "OK" }]);
+                            }
+                        }
+                    }
+                ]
+            );
         }
-        
-        
+
         function generateFlowId(length = 8) {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
             let result = '';
@@ -449,48 +746,145 @@
             return result;
         }
 
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function showCustomAlert(title, message, buttons) {
+            document.getElementById('custom-alert-title').textContent = title;
+            document.getElementById('custom-alert-message').innerHTML = message;
+            const buttonsContainer = document.getElementById('custom-alert-buttons');
+            buttonsContainer.innerHTML = '';
+
+            buttons.forEach(btnInfo => {
+                const button = document.createElement('button');
+                button.textContent = btnInfo.text;
+                button.className = `px-4 py-2 rounded-md text-white font-semibold ${btnInfo.class || 'bg-indigo-600 hover:bg-indigo-500'}`;
+                button.onclick = () => {
+                    hideModal('custom-alert-modal');
+                    if (btnInfo.callback) btnInfo.callback();
+                };
+                buttonsContainer.appendChild(button);
+            });
+            showModal('custom-alert-modal');
+        }
+
         // --- Auth & New Bot Logic ---
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
         const loginTabBtn = document.getElementById('login-tab-btn');
         const registerTabBtn = document.getElementById('register-tab-btn');
-        const logoutBtn = document.getElementById('logout-btn');
         const authError = document.getElementById('auth-error');
         const newBotCard = document.getElementById('new-bot-card');
-        
-        // New Modal Elements
-        const newBotModal = document.getElementById('new-bot-modal');
-        const closeNewBotModalBtn = document.getElementById('close-new-bot-modal-btn');
+
         const createFromScratchBtn = document.getElementById('create-from-scratch-btn');
         const importFromFileBtn = document.getElementById('import-from-file-btn');
         const importFileInput = document.getElementById('import-file-input');
+        const userMenuBtn = document.getElementById('user-menu-btn');
+        const userMenu = document.getElementById('user-menu');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        userMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userMenu.classList.toggle('hidden');
+        });
 
         newBotCard.addEventListener('click', (e) => {
             e.preventDefault();
-            newBotModal.classList.remove('hidden');
-            newBotModal.classList.add('flex');
-        });
-
-        closeNewBotModalBtn.addEventListener('click', () => {
-            newBotModal.classList.add('hidden');
-            newBotModal.classList.remove('flex');
-        });
-
-        newBotModal.addEventListener('click', (e) => {
-            if (e.target === newBotModal) {
-                closeNewBotModalBtn.click();
+            if (newBotCard.classList.contains('cursor-wait')) return;
+            const limitReached = currentUserBotCount >= 1 && !isPremiumUser;
+            if (limitReached) {
+                showModal('upgrade-modal');
+            } else {
+                showModal('new-bot-modal');
             }
         });
 
-        createFromScratchBtn.addEventListener('click', () => {
+        document.querySelectorAll('[data-close-modal]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                hideModal(btn.dataset.closeModal);
+            });
+        });
+
+        document.querySelectorAll('.modal-container').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    hideModal(modal.id);
+                }
+            });
+        });
+
+        document.querySelectorAll('.upgrade-plan-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                showCustomAlert("Em Breve", "A integração com o sistema de pagamento estará disponível em breve!", [{ text: "Entendido" }]);
+            });
+        });
+
+        // [ALTERADO] Adiciona status 'rascunho' na criação
+        createFromScratchBtn.addEventListener('click', async () => {
+            if (currentUserBotCount >= 1 && !isPremiumUser) {
+                hideModal('new-bot-modal');
+                showModal('upgrade-modal');
+                return;
+            }
+
+            const ownerId = localStorage.getItem('ownerId');
+            if (!ownerId) {
+                showCustomAlert("Erro", "Usuário não autenticado. Por favor, faça login novamente.", [{ text: "OK" }]);
+                return;
+            }
+
             const newFlowId = generateFlowId();
-            window.location.href = `create.html?flowId=${newFlowId}`;
+
+            const skeletonFlow = {
+                owner: ownerId,
+                lastUpdated: new Date().toISOString(),
+                status: 'rascunho', // Novo status padrão
+                settings: {
+                    botName: 'Novo Funil',
+                    botAvatar: '',
+                    chatTheme: 'dark',
+                    chatBackground: ''
+                },
+                nodes: [
+                    { id: 'node_start', type: 'start', position: { x: 1884, y: 250 }, data: {} },
+                    { id: 'node_msg1', type: 'message', position: { x: 2234, y: 250 }, data: { text: 'Olá! Bem-vindo(a).' } }
+                ],
+                connections: [{ from: 'node_start', to: 'node_msg1' }]
+            };
+
+            try {
+                const newFlowRef = ref(db, `published_bots/${newFlowId}`);
+                await set(newFlowRef, skeletonFlow);
+                window.location.href = `create.html?flowId=${newFlowId}`;
+            } catch (error) {
+                console.error("Erro ao criar o esqueleto do funil:", error);
+                showCustomAlert("Erro", "Não foi possível criar o novo funil. Tente novamente.", [{ text: "OK" }]);
+            }
         });
 
         importFromFileBtn.addEventListener('click', () => {
+            if (currentUserBotCount >= 1 && !isPremiumUser) {
+                hideModal('new-bot-modal');
+                showModal('upgrade-modal');
+                return;
+            }
             importFileInput.click();
         });
 
+        // [ALTERADO] Adiciona status 'rascunho' na importação
         importFileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (!file) return;
@@ -499,31 +893,27 @@
             reader.onload = async (e) => {
                 try {
                     const flowData = JSON.parse(e.target.result);
-
                     if (!flowData.nodes || !flowData.connections || !flowData.settings) {
-                        alert('Arquivo JSON inválido. A estrutura esperada não foi encontrada.');
+                        showCustomAlert("Erro", "Arquivo JSON inválido. A estrutura esperada não foi encontrada.", [{ text: "OK" }]);
                         return;
                     }
-                    
+
                     const newFlowId = generateFlowId();
                     const ownerId = localStorage.getItem('ownerId');
-
                     if (!ownerId) {
-                        alert('Erro: Usuário não autenticado. Não é possível importar o funil.');
+                        showCustomAlert("Erro", "Usuário não autenticado. Não é possível importar o funil.", [{ text: "OK" }]);
                         return;
                     }
 
                     flowData.owner = ownerId;
                     flowData.lastUpdated = new Date().toISOString();
-
+                    flowData.status = 'rascunho'; // Novo status padrão
                     const newFlowRef = ref(db, `published_bots/${newFlowId}`);
                     await set(newFlowRef, flowData);
-                    
                     window.location.href = `create.html?flowId=${newFlowId}`;
-
                 } catch (error) {
                     console.error("Erro ao importar o arquivo JSON:", error);
-                    alert('Ocorreu um erro ao ler o arquivo JSON. Verifique se o formato está correto.');
+                    showCustomAlert("Erro", "Ocorreu um erro ao ler o arquivo JSON.", [{ text: "OK" }]);
                 } finally {
                     importFileInput.value = '';
                 }
@@ -574,6 +964,14 @@
             button.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>A criar...`;
 
             createUserWithEmailAndPassword(auth, email, password)
+                .then(async (userCredential) => {
+                    const user = userCredential.user;
+                    const userRef = ref(db, `users/${user.uid}`);
+                    await set(userRef, {
+                        email: user.email,
+                        plan: 'free'
+                    });
+                })
                 .catch(error => {
                     if (error.code === 'auth/email-already-in-use') {
                         authError.textContent = 'Este email já está em uso.';
@@ -581,6 +979,7 @@
                         authError.textContent = 'A senha é muito fraca.';
                     } else {
                         authError.textContent = 'Erro ao criar conta.';
+                        console.error("Register error:", error);
                     }
                 })
                 .finally(() => {
@@ -589,18 +988,18 @@
                 });
         });
 
-        logoutBtn.addEventListener('click', () => {
-            signOut(auth);
-        });
-        
+        logoutBtn.addEventListener('click', () => { signOut(auth); });
+
         document.body.addEventListener('click', (e) => {
+            if (userMenu && !userMenu.classList.contains('hidden') && !userMenuBtn.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
             document.querySelectorAll('.card-menu').forEach(menu => {
                 if (!menu.classList.contains('hidden') && !menu.previousElementSibling.contains(e.target)) {
                     menu.classList.add('hidden');
                 }
             })
         });
-
     </script>
 </body>
 
