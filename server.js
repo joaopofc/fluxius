@@ -53,7 +53,7 @@ app.post('/usuarios', async (req, res) => {
 });
 
 // Webhook do Stripe
-app.post('/webhook', (req, res) => {
+app.post('/webhook_stp', (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
 
