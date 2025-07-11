@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Construtor de Fluxo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
@@ -619,13 +619,13 @@
 </head>
 
 <body class="bg-gray-100 dark:bg-gray-900 h-screen flex flex-col">
+    <!-- [NOVO] Tela de carregamento/bloqueio -->
     <div id="auth-blocker" class="fixed inset-0 z-[9999] bg-[#0d0d0d] flex items-center justify-center">
         <p class="text-gray-400 text-lg"><i class="fas fa-spinner fa-spin mr-2"></i>Verificando permissões...</p>
     </div>
 
-    <!-- [ALTERADO] Removida a classe de cor de fundo fixa -->
     <div id="toast-notification"
-        class="fixed top-20 left-1/2 -translate-x-1/2 text-white px-6 py-3 rounded-lg shadow-lg z-[9999] opacity-0 transition-opacity duration-300 pointer-events-none">
+        class="fixed top-20 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg z-[9999] opacity-0 transition-opacity duration-300 pointer-events-none">
         <p id="toast-message"></p>
     </div>
     <header class="bg-white dark:bg-gray-800 shadow-md z-30">
@@ -666,8 +666,8 @@
                     <i class="fas fa-moon"></i>
                 </button>
                 <button id="save-flow"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow w-36 no-select">
-                    <!-- Conteúdo dinâmico via JS -->
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow w-32 no-select">Publicar
+                    <i class="fas fa-upload ml-2"></i>
                 </button>
             </div>
         </div>
@@ -805,31 +805,35 @@
             auth = getAuth(firebaseApp);
         } catch (e) { console.error("Erro ao inicializar o Firebase:", e); }
 
+        // [ALTERADO] Função de navegação agora aceita parâmetros
         function navigateToDashboard(params = '') {
             const currentPath = window.location.pathname;
             const newPath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1) + 'dashboard.html' + params;
             window.location.href = new URL(newPath, window.location.origin).href;
         }
 
+        // [ALTERADO] Lógica de autenticação agora chama a verificação de permissão
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 userId = user.uid;
-                handleAuthorization();
+                handleAuthorization(); // Ponto de entrada seguro
             } else {
                 navigateToDashboard();
             }
         });
 
+        // [NOVO] Função principal para verificar permissões antes de carregar o construtor
         async function handleAuthorization() {
             const urlParams = new URLSearchParams(window.location.search);
             const flowId = urlParams.get('flowId');
-            const isPremiumUser = false;
+            const isPremiumUser = false; // No futuro, isso viria do banco de dados do usuário
 
             if (!flowId) {
                 navigateToDashboard('?error=invalid_flow');
                 return;
             }
 
+            // 1. Contar os funis existentes do usuário
             const botsRef = ref(db, 'published_bots');
             const botsSnapshot = await get(botsRef);
             let userBotCount = 0;
@@ -842,37 +846,47 @@
                 }
             }
 
+            // 2. Verificar se o flowId da URL já existe
             const flowRef = ref(db, `published_bots/${flowId}`);
             const flowSnapshot = await get(flowRef);
 
             if (flowSnapshot.exists()) {
+                // O fluxo existe, é uma tentativa de EDIÇÃO
                 const flowData = flowSnapshot.val();
                 if (flowData.owner !== userId) {
+                    // O usuário não é o dono deste fluxo
                     navigateToDashboard('?error=unauthorized');
                 } else {
+                    // O usuário é o dono, carregar o fluxo para edição
                     loadExistingFlow(flowId, flowData);
                 }
             } else {
-                if (userBotCount <= 1 && !isPremiumUser) {
+                // O fluxo NÃO existe, é uma tentativa de CRIAÇÃO
+                if (userBotCount >= 1 && !isPremiumUser) {
+                    // Usuário gratuito atingiu o limite
                     navigateToDashboard('?error=limit_reached');
                 } else {
+                    // Usuário tem permissão, mas o fluxo não existe (acesso direto à URL)
+                    // Isso indica que o fluxo deveria ter sido criado pelo dashboard.
+                    // Como não foi, é um acesso inválido.
                     navigateToDashboard('?error=creation_failed');
                 }
             }
         }
-
+        
+        // [NOVO] Função para carregar um fluxo existente e inicializar a UI
         function loadExistingFlow(flowId, flowData) {
             currentFlowId = flowId;
             originalFlowId = flowId;
             nodes = flowData.nodes || [];
             connections = flowData.connections || [];
             botSettings = flowData.settings || {};
-            currentFlowStatus = flowData.status || 'rascunho';
-
+            
+            // Esconde a tela de bloqueio e mostra o construtor
             document.getElementById('auth-blocker').style.display = 'none';
 
+            // Continua com a inicialização da UI
             updateSettingsUI();
-            updateSaveButtonState();
             centerView();
             renderAll();
         }
@@ -923,11 +937,10 @@
         let dragInfo = { isDragging: false, startX: 0, startY: 0, nodeOffsetX: 0, nodeOffsetY: 0, draggedType: null };
         let currentFlowId = null;
         let originalFlowId = null;
-        let currentFlowStatus = 'rascunho';
         let draggedGroupItemInfo = null;
         let tempSvgLine = null;
         let lastHoveredNodeEl = null;
-        let lastCaretPos = {};
+        let lastCaretPos = {}; 
         let dropTargetInfo = { parentId: null, index: -1 };
         let monacoEditorInstance = null;
 
@@ -955,7 +968,7 @@
             if (panDelta.x !== 0 || panDelta.y !== 0) {
                 pan.x += panDelta.x;
                 pan.y += panDelta.y;
-                panDelta = { x: 0, y: 0 };
+                panDelta = { x: 0, y: 0 }; 
                 applyTransform();
             }
 
@@ -1045,7 +1058,7 @@
 
             let contentHTML = '';
             if (node.type === 'group') {
-                contentHTML = '<div class="space-y-1 node-group-content">';
+                contentHTML = '<div class="space-y-1 node-group-content">'; 
                 (node.data.children || []).forEach(childId => {
                     const childNode = nodes.find(n => n.id === childId);
                     if (childNode) {
@@ -1407,7 +1420,7 @@
             const defaultData = {
                 message: { text: 'Nova mensagem...' },
                 image: { text: 'Legenda da imagem...', url: '' },
-                audio: { text: '', url: '' },
+                audio: { text: 'Descrição do áudio...', url: '' },
                 video: { text: 'Descrição do vídeo...', url: '' },
                 'http-request': { method: 'GET', url: '', headers: [{ key: '', value: '' }], body: '', responseMappings: [{ path: 'datajsonvalue', variable: 'response' }] },
                 buttons: { text: 'Escolha uma opção:', buttons: [{ label: 'Botão 1', target: null }] },
@@ -1564,7 +1577,7 @@
                         startY: e.clientY,
                         nodeOffsetX: e.clientX - nodeEl.getBoundingClientRect().left,
                         nodeOffsetY: e.clientY - nodeEl.getBoundingClientRect().top,
-                        draggedType: node.type
+                        draggedType: node.type 
                     };
                     activeNodeElement = nodeEl;
                     activeNodeElement.classList.add('dragging');
@@ -1784,7 +1797,7 @@
 
                 const inputTypeSelect = document.getElementById('node-input-type');
                 if (inputTypeSelect) {
-                    inputTypeSelect.value = node.data.inputType || 'text';
+                    inputTypeSelect.value = node.data.inputType || 'text'; 
                     inputTypeSelect.addEventListener('change', (e) => updateNodeData('inputType', e.target.value));
                 }
             }
@@ -1928,7 +1941,7 @@
         });
         canvasContainer.addEventListener('touchstart', (e) => {
             if (e.target === canvas) { isPanning = true; lastTouch = e.touches[0]; canvasContainer.classList.add('panning'); }
-        }, { passive: true });
+        });
 
         document.addEventListener('mousemove', (e) => {
             if (isPanning) {
@@ -1998,7 +2011,7 @@
 
                     if (groupNodeEl && droppedNodeData) {
                         if (nodeHasMultipleOutputs(droppedNodeData.type)) {
-                            showToast("Blocos com múltiplas saídas não podem ser adicionados a um grupo.", 'error');
+                            showToast("Blocos com múltiplas saídas não podem ser adicionados a um grupo.");
                         } else {
                             const groupNode = nodes.find(n => n.id === groupNodeEl.id);
                             if (groupNode) {
@@ -2194,11 +2207,11 @@
 
             if (type && dropTargetInfo.parentId) {
                 if (nodeHasMultipleOutputs(type)) {
-                    showToast("Blocos com múltiplas saídas não podem ser adicionados a um grupo.", 'error');
+                    showToast("Blocos com múltiplas saídas não podem ser adicionados a um grupo.");
                 } else {
                     const parentNode = nodes.find(n => n.id === dropTargetInfo.parentId);
                     if (parentNode) {
-                        const defaultData = { message: { text: 'Nova mensagem...' }, image: { text: 'Legenda da imagem...', url: '' }, audio: { text: '', url: '' }, video: { text: 'Descrição do vídeo...', url: '' }, 'http-request': { method: 'GET', url: '', headers: [{ key: '', value: '' }], body: '', responseMappings: [{ path: 'datajsonvalue', variable: 'response' }] }, buttons: { text: 'Escolha uma opção:', buttons: [{ label: 'Botão 1', target: null }] }, delay: { delay: 2 }, input: { text: 'Qual é o seu nome?', variableName: 'nome' }, group: { title: 'Novo Grupo', children: [] }, redirect: { url: 'https://', openInNewTab: true }, condition: { variable: '', operator: '==', value: '' }, embed: { embedCode: '', height: 400 } };
+                        const defaultData = { message: { text: 'Nova mensagem...' }, image: { text: 'Legenda da imagem...', url: '' }, audio: { text: 'Descrição do áudio...', url: '' }, video: { text: 'Descrição do vídeo...', url: '' }, 'http-request': { method: 'GET', url: '', headers: [{ key: '', value: '' }], body: '', responseMappings: [{ path: 'datajsonvalue', variable: 'response' }] }, buttons: { text: 'Escolha uma opção:', buttons: [{ label: 'Botão 1', target: null }] }, delay: { delay: 2 }, input: { text: 'Qual é o seu nome?', variableName: 'nome' }, group: { title: 'Novo Grupo', children: [] }, redirect: { url: 'https://', openInNewTab: true }, condition: { variable: '', operator: '==', value: '' }, embed: { embedCode: '', height: 400 } };
                         const newNode = { id: `node_${Date.now()}`, type, data: { ...(defaultData[type] || {}) } };
                         nodes.push(newNode);
                         if (!parentNode.data.children) parentNode.data.children = [];
@@ -2227,72 +2240,97 @@
                 .replace(/[^a-z0-9-]/g, '');
         }
 
-        async function saveFlowToFirebase() {
+        async function saveFlowToFirebase(isPublishing = false) {
             if (!db || !userId) {
-                showToast("Não é possível salvar. Usuário não autenticado.", 'error');
+                showToast("Não é possível salvar. Usuário não autenticado.");
                 return false;
             }
 
-            const flowData = {
-                nodes,
-                connections,
-                settings: botSettings,
-                owner: userId,
-                status: currentFlowStatus,
-                lastUpdated: new Date().toISOString()
-            };
+            const newFlowId = sanitizeFlowId(headerFlowIdInput.value.trim());
+            headerFlowIdInput.value = newFlowId;
 
-            const flowRef = ref(db, `published_bots/${currentFlowId}`);
+            if (!newFlowId) {
+                showToast("O ID de publicação não pode estar vazio.");
+                return false;
+            }
+
+            const flowData = { nodes, connections, settings: botSettings, owner: userId, lastUpdated: new Date().toISOString() };
+
+            if (newFlowId === originalFlowId) {
+                const flowRef = ref(db, `published_bots/${newFlowId}`);
+                try {
+                    await set(flowRef, flowData);
+                    return true;
+                } catch (error) {
+                    console.error("Erro ao salvar o fluxo: ", error);
+                    return false;
+                }
+            }
+
+            headerFlowIdStatus.textContent = 'Verificando ID...';
+            headerFlowIdStatus.className = 'absolute left-0 -bottom-5 text-xs h-4 text-yellow-400';
+            const newFlowRef = ref(db, `published_bots/${newFlowId}`);
+
             try {
-                await set(flowRef, flowData);
+                const snapshot = await get(newFlowRef);
+                if (snapshot.exists()) {
+                    headerFlowIdStatus.textContent = 'Este ID já está em uso.';
+                    headerFlowIdStatus.className = 'absolute left-0 -bottom-5 text-xs h-4 text-red-500';
+                    return false;
+                }
+
+                if (originalFlowId) {
+                    const oldAnalyticsRef = ref(db, `analytics/${originalFlowId}`);
+                    const analyticsSnapshot = await get(oldAnalyticsRef);
+                    if (analyticsSnapshot.exists()) {
+                        const analyticsData = analyticsSnapshot.val();
+                        const newAnalyticsRef = ref(db, `analytics/${newFlowId}`);
+                        await set(newAnalyticsRef, analyticsData);
+                        await remove(oldAnalyticsRef);
+                    }
+                    const oldFlowRef = ref(db, `published_bots/${originalFlowId}`);
+                    await remove(oldFlowRef);
+                }
+
+                await set(newFlowRef, flowData);
+
+                currentFlowId = newFlowId;
+                originalFlowId = newFlowId;
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('flowId', newFlowId);
+                history.pushState({}, '', newUrl);
+
+                updateShareableUrl();
+                if (isPublishing) {
+                    headerFlowIdStatus.textContent = '';
+                } else {
+                    headerFlowIdStatus.textContent = 'ID atualizado com sucesso!';
+                    headerFlowIdStatus.className = 'absolute left-0 -bottom-5 text-xs h-4 text-green-500';
+                    setTimeout(() => { headerFlowIdStatus.textContent = ''; }, 2500);
+                }
+
                 return true;
+
             } catch (error) {
-                console.error("Erro ao salvar o fluxo: ", error);
+                console.error("Erro ao renomear o fluxo:", error);
+                headerFlowIdStatus.textContent = 'Erro ao salvar.';
+                headerFlowIdStatus.className = 'absolute left-0 -bottom-5 text-xs h-4 text-red-500';
                 return false;
             }
         }
 
         saveFlowBtn.addEventListener('click', async () => {
             saveFlowBtn.disabled = true;
-            const isPublishing = currentFlowStatus === 'rascunho';
-
-            if (isPublishing) {
-                currentFlowStatus = 'ativo';
-                saveFlowBtn.innerHTML = `Publicando... <i class="fas fa-spinner fa-spin ml-2"></i>`;
-            } else {
-                saveFlowBtn.innerHTML = `Salvando... <i class="fas fa-spinner fa-spin ml-2"></i>`;
-            }
-
-            const success = await saveFlowToFirebase();
-
+            saveFlowBtn.innerHTML = `Publicando...`;
+            const success = await saveFlowToFirebase(true);
             if (success) {
-                if (isPublishing) {
-                    showToast("Funil publicado com sucesso!", 'success');
-                } else {
-                    showToast("Alterações salvas!", 'success');
-                }
+                saveFlowBtn.innerHTML = `Publicado! <i class="fas fa-check ml-2"></i>`;
+                setTimeout(() => { saveFlowBtn.innerHTML = `Publicar <i class="fas fa-upload ml-2"></i>`; saveFlowBtn.disabled = false; }, 2000);
             } else {
-                showToast("Erro ao salvar o funil.", 'error');
-                if (isPublishing) {
-                    currentFlowStatus = 'rascunho';
-                }
+                saveFlowBtn.innerHTML = `Falhou <i class="fas fa-times ml-2"></i>`;
+                setTimeout(() => { saveFlowBtn.innerHTML = `Publicar <i class="fas fa-upload ml-2"></i>`; saveFlowBtn.disabled = false; }, 2000);
             }
-
-            saveFlowBtn.disabled = false;
-            updateSaveButtonState();
         });
-
-        function updateSaveButtonState() {
-            if (currentFlowStatus === 'ativo') {
-                saveFlowBtn.innerHTML = `Salvar <i class="fas fa-save ml-2"></i>`;
-                saveFlowBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                saveFlowBtn.classList.add('bg-green-600', 'hover:bg-green-700');
-            } else {
-                saveFlowBtn.innerHTML = `Publicar <i class="fas fa-upload ml-2"></i>`;
-                saveFlowBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                saveFlowBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
-            }
-        }
 
         function centerView() {
             const startNode = nodes.find(n => n.type === 'start');
@@ -2334,7 +2372,7 @@
         }
 
         function downloadJson() {
-            const dataStr = JSON.stringify({ nodes, connections, settings: botSettings, status: 'rascunho' }, null, 2);
+            const dataStr = JSON.stringify({ nodes, connections, settings: botSettings }, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
 
             const exportFileDefaultName = `${currentFlowId || 'novo-fluxo'}.json`;
@@ -2451,7 +2489,7 @@
             try {
                 await remove(analyticsRef);
                 hideConfirmationModal();
-                loadAnalytics();
+                loadAnalytics(); 
             } catch (error) {
                 console.error("Erro ao apagar analytics:", error);
                 alert("Falha ao apagar os dados.");
@@ -2459,19 +2497,10 @@
             }
         }
 
-        // [ALTERADO] Função agora aceita um tipo para definir a cor
-        function showToast(message, type = 'error') {
+        function showToast(message) {
             const toast = document.getElementById('toast-notification');
             const toastMessage = document.getElementById('toast-message');
             if (!toast || !toastMessage) return;
-
-            toast.classList.remove('bg-red-600', 'bg-green-600');
-
-            if (type === 'success') {
-                toast.classList.add('bg-green-600');
-            } else {
-                toast.classList.add('bg-red-600');
-            }
 
             toastMessage.textContent = message;
             toast.classList.remove('opacity-0');
@@ -2511,13 +2540,13 @@
             headerFlowIdStatus.textContent = '';
             const newId = sanitizeFlowId(headerFlowIdInput.value);
             if (newId === originalFlowId) {
-                headerFlowIdInput.value = originalFlowId;
+                headerFlowIdInput.value = originalFlowId; 
                 return;
             };
 
             const success = await saveFlowToFirebase();
             if (!success) {
-                headerFlowIdInput.value = originalFlowId;
+                headerFlowIdInput.value = originalFlowId; 
             }
         });
 
@@ -2547,7 +2576,7 @@
         populateAddNodePanel();
         setupAccordion('#settings-modal .accordion-item');
         document.addEventListener('contextmenu', function (e) {
-            e.preventDefault();
+            e.preventDefault(); 
         });
     </script>
 </body>
