@@ -3,7 +3,8 @@ const express = require('express');
 const admin = require('firebase-admin');
 const bodyParser = require('body-parser');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const mercadopago = require('mercadopago');
+const axios = require('axios'); // ✅ Substitui o SDK do Mercado Pago
+
 const app = express();
 
 // Usar o raw body para validar assinatura do Stripe
@@ -64,13 +65,10 @@ app.post('/webhook_stp', (req, res) => {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Tratar evento de pagamento confirmado
   if (event.type === 'invoice.paid') {
     const email = event.data.object.customer_email;
-
     console.log('Pagamento confirmado. Email:', email);
 
-    // Buscar usuário no Firebase com esse email e atualizar o plano
     const ref = db.ref('usuarios');
     ref.once('value', (snapshot) => {
       const usuarios = snapshot.val();
@@ -87,30 +85,31 @@ app.post('/webhook_stp', (req, res) => {
   res.status(200).send('Evento recebido com sucesso');
 });
 
-// Configurar Mercado Pago
-mercadopago.configure({
-  access_token: "APP_USR-4128571484840245-051411-4e2440590f5e3a407cc718aecec17f6e-1361831608", // ex: 'TEST-1234567890abcdef'
-});
-
-// Webhook do Mercado Pago
+// Webhook do Mercado Pago (sem SDK)
 app.post('/webhook_mp', async (req, res) => {
   try {
     const body = req.body;
-
-    if (body.type === 'payment' && body.data && body.data.id) {
+    if (body.type === 'payment' && body.data?.id) {
       const paymentId = body.data.id;
 
-      // Buscar dados completos do pagamento no MP
-      const result = await mercadopago.payment.findById(paymentId);
-      const payment = result.body;
+      const tokenValid = "APP_USR-4128571484840245-051411-4e2440590f5e3a407cc718aecec17f6e-1361831608";
 
-      // Verificações de status e tipo
+      const response = await axios.get(
+        `https://api.mercadopago.com/v1/payments/${paymentId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${tokenValid}`
+          }
+        }
+      );
+
+      const payment = response.data;
+
       if (payment.status === 'approved' && payment.payment_type_id === 'pix') {
         const email = payment.payer?.email;
         console.log('✅ PIX aprovado pelo Mercado Pago. Email:', email);
 
         if (email) {
-          // Atualizar plano do usuário com esse e-mail no Firebase
           const ref = db.ref('usuarios');
           ref.once('value', (snapshot) => {
             const usuarios = snapshot.val();
@@ -128,11 +127,10 @@ app.post('/webhook_mp', async (req, res) => {
 
     res.sendStatus(200);
   } catch (error) {
-    console.error('❌ Erro no webhook do Mercado Pago:', error);
+    console.error('❌ Erro no webhook do Mercado Pago:', error?.response?.data || error.message);
     res.sendStatus(500);
   }
 });
-
 
 // Start
 const PORT = process.env.PORT || 3000;
