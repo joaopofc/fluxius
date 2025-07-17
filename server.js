@@ -68,7 +68,7 @@ app.post('/webhook_stp', (req, res) => {
   if (event.type === 'invoice.paid') {
     const email = event.data.object.customer_email;
 
-    console.log('✅ Pagamento confirmado. Email:', email);
+    console.log('Pagamento confirmado. Email:', email);
 
     // Buscar usuário no Firebase com esse email e atualizar o plano
     const ref = db.ref('usuarios');
