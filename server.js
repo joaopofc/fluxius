@@ -3,7 +3,7 @@ const express = require('express');
 const admin = require('firebase-admin');
 const bodyParser = require('body-parser');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-
+const mercadopago = require('mercadopago');
 const app = express();
 
 // Usar o raw body para validar assinatura do Stripe
@@ -86,6 +86,53 @@ app.post('/webhook_stp', (req, res) => {
 
   res.status(200).send('Evento recebido com sucesso');
 });
+
+// Configurar Mercado Pago
+mercadopago.configure({
+  access_token: "APP_USR-4128571484840245-051411-4e2440590f5e3a407cc718aecec17f6e-1361831608", // ex: 'TEST-1234567890abcdef'
+});
+
+// Webhook do Mercado Pago
+app.post('/webhook_mp', async (req, res) => {
+  try {
+    const body = req.body;
+
+    if (body.type === 'payment' && body.data && body.data.id) {
+      const paymentId = body.data.id;
+
+      // Buscar dados completos do pagamento no MP
+      const result = await mercadopago.payment.findById(paymentId);
+      const payment = result.body;
+
+      // Verificações de status e tipo
+      if (payment.status === 'approved' && payment.payment_type_id === 'pix') {
+        const email = payment.payer?.email;
+        console.log('✅ PIX aprovado pelo Mercado Pago. Email:', email);
+
+        if (email) {
+          // Atualizar plano do usuário com esse e-mail no Firebase
+          const ref = db.ref('usuarios');
+          ref.once('value', (snapshot) => {
+            const usuarios = snapshot.val();
+            for (const id in usuarios) {
+              if (usuarios[id].email === email) {
+                console.log(`🔄 Atualizando plano do usuário ${id}`);
+                ref.child(id).update({ plano: 'premium' });
+                break;
+              }
+            }
+          });
+        }
+      }
+    }
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error('❌ Erro no webhook do Mercado Pago:', error);
+    res.sendStatus(500);
+  }
+});
+
 
 // Start
 const PORT = process.env.PORT || 3000;

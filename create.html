@@ -245,12 +245,10 @@
         }
 
         .add-node-btn {
-            background: radial-gradient(#45454582, transparent);
+            background: linear-gradient(104deg, #4b49506b, #4b49506b);
             color: #d1d5db;
-            border-radius: 8px;
-            border: 1.2px solid #524e4e;
-            box-shadow: -1px 1px 10px -7px #74e8ff;
-            padding: 8px 12px;
+            border-radius: 15px;
+            padding: 10px 15px;
             transition: background-color 0.2s;
             cursor: pointer;
         }
@@ -677,7 +675,7 @@
         <aside id="sidebar" class="w-80 bg-white dark:bg-gray-800 shadow-lg z-10 flex flex-col">
             <div class="flex-grow relative overflow-y-auto">
                 <div id="blocks-panel-container" class="p-4">
-                    <h2 class="text-lg font-semibold mb-4 text-white no-select">Blocos</h2>
+                    <h2 class="text-lg font-semibold mb-4 text-white no-select">Blocos disponíveis</h2>
                     <div id="add-node-panel" class="grid grid-cols-2 gap-2 no-select">
                     </div>
                 </div>
@@ -873,7 +871,7 @@
                 }
             }
         }
-        
+
         // [NOVO] Função para carregar um fluxo existente e inicializar a UI
         function loadExistingFlow(flowId, flowData) {
             currentFlowId = flowId;
@@ -881,7 +879,7 @@
             nodes = flowData.nodes || [];
             connections = flowData.connections || [];
             botSettings = flowData.settings || {};
-            
+
             // Esconde a tela de bloqueio e mostra o construtor
             document.getElementById('auth-blocker').style.display = 'none';
 
@@ -940,7 +938,7 @@
         let draggedGroupItemInfo = null;
         let tempSvgLine = null;
         let lastHoveredNodeEl = null;
-        let lastCaretPos = {}; 
+        let lastCaretPos = {};
         let dropTargetInfo = { parentId: null, index: -1 };
         let monacoEditorInstance = null;
 
@@ -968,7 +966,7 @@
             if (panDelta.x !== 0 || panDelta.y !== 0) {
                 pan.x += panDelta.x;
                 pan.y += panDelta.y;
-                panDelta = { x: 0, y: 0 }; 
+                panDelta = { x: 0, y: 0 };
                 applyTransform();
             }
 
@@ -1058,7 +1056,7 @@
 
             let contentHTML = '';
             if (node.type === 'group') {
-                contentHTML = '<div class="space-y-1 node-group-content">'; 
+                contentHTML = '<div class="space-y-1 node-group-content">';
                 (node.data.children || []).forEach(childId => {
                     const childNode = nodes.find(n => n.id === childId);
                     if (childNode) {
@@ -1526,14 +1524,14 @@
                 case 'image': return { icon: `<i class="fa-regular fa-image"></i>`, title: 'Imagem' };
                 case 'audio': return { icon: `<i class="fa-solid fa-headphones"></i>`, title: 'Áudio' };
                 case 'video': return { icon: `<i class="fa-solid fa-film"></i>`, title: 'Vídeo' };
-                case 'http-request': return { icon: `<i class="fa-solid fa-server"></i>`, title: 'Requisição' };
+                case 'http-request': return { icon: `<i class="fa-solid fa-server"></i>`, title: 'HTTP' };
                 case 'buttons': return { icon: `<i class="fa-solid fa-ellipsis"></i>`, title: 'Botões' };
                 case 'delay': return { icon: `<i class="fa-regular fa-hourglass-half"></i>`, title: 'Delay' };
                 case 'input': return { icon: `<i class="fa-regular fa-keyboard"></i>`, title: 'Input' };
                 case 'group': return { icon: `<i class="fa-solid fa-layer-group"></i>`, title: 'Grupo' };
                 case 'redirect': return { icon: `<i class="fa-solid fa-arrow-up-right-from-square"></i>`, title: 'Redirecionar' };
                 case 'condition': return { icon: `<i class="fa-solid fa-code-branch"></i>`, title: 'Condicional' };
-                case 'embed': return { icon: `<i class="fa-solid fa-code"></i>`, title: 'Incorporar' };
+                case 'embed': return { icon: `<i class="fa-solid fa-code"></i>`, title: 'Embed' };
                 case 'start': default: return { icon: `<i class="fa-solid fa-play"></i>`, title: 'Início' };
             }
         }
@@ -1577,7 +1575,7 @@
                         startY: e.clientY,
                         nodeOffsetX: e.clientX - nodeEl.getBoundingClientRect().left,
                         nodeOffsetY: e.clientY - nodeEl.getBoundingClientRect().top,
-                        draggedType: node.type 
+                        draggedType: node.type
                     };
                     activeNodeElement = nodeEl;
                     activeNodeElement.classList.add('dragging');
@@ -1797,7 +1795,7 @@
 
                 const inputTypeSelect = document.getElementById('node-input-type');
                 if (inputTypeSelect) {
-                    inputTypeSelect.value = node.data.inputType || 'text'; 
+                    inputTypeSelect.value = node.data.inputType || 'text';
                     inputTypeSelect.addEventListener('change', (e) => updateNodeData('inputType', e.target.value));
                 }
             }
@@ -2489,7 +2487,7 @@
             try {
                 await remove(analyticsRef);
                 hideConfirmationModal();
-                loadAnalytics(); 
+                loadAnalytics();
             } catch (error) {
                 console.error("Erro ao apagar analytics:", error);
                 alert("Falha ao apagar os dados.");
@@ -2540,13 +2538,13 @@
             headerFlowIdStatus.textContent = '';
             const newId = sanitizeFlowId(headerFlowIdInput.value);
             if (newId === originalFlowId) {
-                headerFlowIdInput.value = originalFlowId; 
+                headerFlowIdInput.value = originalFlowId;
                 return;
             };
 
             const success = await saveFlowToFirebase();
             if (!success) {
-                headerFlowIdInput.value = originalFlowId; 
+                headerFlowIdInput.value = originalFlowId;
             }
         });
 
@@ -2576,7 +2574,7 @@
         populateAddNodePanel();
         setupAccordion('#settings-modal .accordion-item');
         document.addEventListener('contextmenu', function (e) {
-            e.preventDefault(); 
+            e.preventDefault();
         });
     </script>
 </body>
