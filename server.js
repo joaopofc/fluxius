@@ -1,13 +1,13 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const admin = require('firebase-admin');
 const bodyParser = require('body-parser');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const axios = require('axios'); // ✅ Substitui o SDK do Mercado Pago
-const cors = require('cors');
-app.use(cors());
 
 const app = express();
+app.use(cors());
 
 // Usar o raw body para validar assinatura do Stripe
 app.use('/webhook', express.raw({ type: 'application/json' }));
