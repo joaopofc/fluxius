@@ -112,6 +112,7 @@
             animation: blink 1.4s infinite both;
             display: inline-block;
             margin-left: 1px;
+            color: #6C6C6C;
         }
 
         .typing-ellipsis span:nth-child(2) {
@@ -124,17 +125,37 @@
 
         @keyframes blink {
             0% {
-                opacity: .2;
+                transform: translateY(0);
             }
 
-            20% {
-                opacity: 1;
+            50% {
+                transform: translateY(-4px);
             }
 
             100% {
-                opacity: .2;
+                transform: translateY(0);
             }
         }
+
+        /* --- INÍCIO DA MODIFICAÇÃO: Animação para o microfone --- */
+        @keyframes pulse-red {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .mic-pulse {
+            animation: pulse-red 1.2s infinite;
+            color: #6C6C6C;
+        }
+
+        /* --- FIM DA MODIFICAÇÃO --- */
 
         .audio-player {
             display: flex;
@@ -192,6 +213,7 @@
             right: 0;
             top: 50%;
             transform: translate(10%, -50%);
+            box-shadow: 0 0 4px 0px #4a4949;
             width: 15px;
             height: 15px;
             background-color: #52A6FE;
@@ -656,6 +678,43 @@
             }
         }
 
+        // --- INÍCIO DA MODIFICAÇÃO: Funções do indicador de "digitando" / "gravando" ---
+        function showTypingIndicator(isAudioNext = false) {
+            hideTypingIndicator(); // Garante que não haja indicadores duplicados
+            const messageList = chatMessages.querySelector('.space-y-1');
+
+            const messageWrapper = document.createElement('div');
+            messageWrapper.id = 'typing-indicator'; // ID para fácil remoção
+            messageWrapper.className = 'message-enter flex justify-start';
+
+            const bubbleContainer = document.createElement('div');
+            bubbleContainer.className = 'bubble-container in';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'p-1 rounded-lg shadow max-w-xs lg:max-w-md message-in flex items-center px-3 py-2';
+
+            if (isAudioNext) {
+                bubble.innerHTML = `<i class="fa-solid fa-microphone mic-pulse text-xl"></i>`;
+            } else {
+
+                bubble.innerHTML = `<div class="typing-ellipsis"><span>●</span><span>●</span><span>●</span></div>`;
+
+            }
+
+            bubbleContainer.appendChild(bubble);
+            messageWrapper.appendChild(bubbleContainer);
+            messageList.appendChild(messageWrapper);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+        // --- FIM DA MODIFICAÇÃO ---
+
         async function processNode(node) {
             if (!node) return;
 
@@ -666,22 +725,28 @@
             if (node.type === 'delay') {
                 const delay = (node.data.delay || 0) * 1000;
                 if (delay > 0) {
-
+                    // --- INÍCIO DA MODIFICAÇÃO: Lógica para verificar próximo bloco ---
                     const nextNodeAfterDelay = findNextNode(node.id);
                     const isNextNodeAudio = nextNodeAfterDelay && nextNodeAfterDelay.type === 'audio';
+                    setTimeout(() => {
+                        showTypingIndicator(isNextNodeAudio); // Mostra o balão de "digitando" ou "gravando"
+                    }, 500);
+                    // --- FIM DA MODIFICAÇÃO ---
 
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    // const nextNodeAfterDelay = findNextNode(node.id);
+                    // const isNextNodeAudio = nextNodeAfterDelay && nextNodeAfterDelay.type === 'audio';
+                    // await new Promise(resolve => setTimeout(resolve, 500));
+                    // if (isNextNodeAudio) {
+                    //    contactStatus.innerHTML = 'gravando áudio<span class="typing-ellipsis"><span>.</span><span>.</span><span>.</span></span>';
+                    // } else {
+                    //    contactStatus.innerHTML = `digitando<span class="typing-ellipsis"><span>.</span><span>.</span><span>.</span></span>`;
+                    // }
 
-                    if (isNextNodeAudio) {
-                        contactStatus.innerHTML = 'gravando áudio<span class="typing-ellipsis"><span>.</span><span>.</span><span>.</span></span>';
-                    } else {
-                        contactStatus.innerHTML = `digitando<span class="typing-ellipsis"><span>.</span><span>.</span><span>.</span></span>`;
-                    }
-
-                    const remainingDelay = Math.max(0, delay - 500);
+                    const remainingDelay = Math.max(0, delay);
                     await new Promise(resolve => setTimeout(resolve, remainingDelay));
 
-                    contactStatus.textContent = 'online';
+                    hideTypingIndicator(); // Esconde o balão antes de prosseguir
+                    // contactStatus.textContent = 'online';
                 }
                 executeNextNode(node.id);
                 return;
@@ -738,7 +803,7 @@
                         executeNextNode(node.id);
                     }
                     break;
-                case 'embed': // --- ADIÇÃO INICIADA ---
+                case 'embed':
                     addMessageBubble('', false, {
                         type: 'embed',
                         embedData: {
@@ -747,7 +812,7 @@
                         }
                     });
                     executeNextNode(node.id);
-                    break; // --- ADIÇÃO FINALIZADA ---
+                    break;
                 case 'http-request':
                     contactStatus.textContent = 'processando...';
                     try {
@@ -833,7 +898,6 @@
             executeNextNode(currentNodeId, { isButtonChoice: true, targetNodeId: targetNodeId });
         }
 
-        // --- ADIÇÃO INICIADA: Funções de validação ---
         function validateInput(text, type) {
             if (!type || type === 'text') {
                 return true; // Nenhuma validação para texto puro
@@ -855,7 +919,6 @@
                     return true;
             }
         }
-        // --- ADIÇÃO FINALIZADA ---
 
         function handleUserInput(text) {
             addMessageBubble(text, true);
@@ -863,7 +926,6 @@
 
             const currentNode = flowData.nodes.find(n => n.id === currentNodeId);
 
-            // --- INÍCIO DA LÓGICA DE VALIDAÇÃO ---
             if (currentNode && currentNode.type === 'input') {
                 const inputType = currentNode.data.inputType || 'text';
                 const isValid = validateInput(text, inputType);
@@ -885,7 +947,6 @@
                     return;
                 }
             }
-            // --- FIM DA LÓGICA DE VALIDAÇÃO ---
 
 
             isWaitingForInput = false;
@@ -937,16 +998,14 @@
             }
         });
 
-        // --- ADIÇÃO INICIADA: Nova função para criar o elemento de embed ---
         function createEmbedElement(embedData) {
             const container = document.createElement('div');
             container.className = 'w-full rounded-md overflow-hidden';
-            container.style.height = `${embedData.height || 400}px`; // Usa a altura definida ou um padrão
+            container.style.height = `${embedData.height || 400}px`;
 
             const code = (embedData.code || '').trim();
 
             if (/<iframe/i.test(code)) {
-                // Se o código já é um iframe, insere diretamente
                 container.innerHTML = code;
                 const iframe = container.querySelector('iframe');
                 if (iframe) {
@@ -955,7 +1014,6 @@
                     iframe.setAttribute('frameborder', '0');
                 }
             } else if (/^https?:\/\//i.test(code)) {
-                // Se for uma URL, cria um iframe
                 const iframe = document.createElement('iframe');
                 iframe.src = code;
                 iframe.style.width = '100%';
@@ -970,10 +1028,13 @@
 
             return container;
         }
-        // --- ADIÇÃO FINALIZADA ---
 
         function addMessageBubble(message, isOutgoing, options = {}) {
-            const { imageUrl = '', audioUrl = '', videoUrl = '', buttons = [], type = 'message', embedData = null } = options; // Adicionado embedData
+            // --- INÍCIO DA MODIFICAÇÃO ---
+            hideTypingIndicator(); // Garante que o indicador suma antes de qualquer nova mensagem
+            // --- FIM DA MODIFICAÇÃO ---
+
+            const { imageUrl = '', audioUrl = '', videoUrl = '', buttons = [], type = 'message', embedData = null } = options;
             const messageList = chatMessages.querySelector('.space-y-1');
 
             const messageWrapper = document.createElement('div');
@@ -999,13 +1060,11 @@
             const bubble = document.createElement('div');
             bubble.className = `p-1 rounded-lg shadow max-w-xs lg:max-w-md ${isOutgoing ? 'message-out' : 'message-in'}`;
 
-            // --- ADIÇÃO INICIADA: Lógica para renderizar o embed ---
             if (type === 'embed' && embedData && embedData.code) {
                 const embedElement = createEmbedElement(embedData);
                 bubble.appendChild(embedElement);
                 bubble.classList.add('p-1', 'overflow-hidden');
             }
-            // --- ADIÇÃO FINALIZADA ---
             else if (type === 'audio' && audioUrl) {
                 const audioPlayer = document.createElement('div');
                 audioPlayer.className = 'audio-player w-full items-center p-1';
@@ -1144,7 +1203,6 @@
                 const textElement = document.createElement('p');
                 textElement.className = 'break-words px-1';
                 if (imageUrl || audioUrl || videoUrl || (embedData && embedData.code)) textElement.classList.add('mt-1');
-                // MODIFICAÇÃO APLICADA AQUI
                 textElement.innerHTML = message.replace(/\n/g, '<br>');
                 bubble.appendChild(textElement);
             }

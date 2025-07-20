@@ -87,52 +87,60 @@ app.post('/webhook_stp', (req, res) => {
   res.status(200).send('Evento recebido com sucesso');
 });
 
-// Webhook do Mercado Pago (sem SDK)
+// Webhook seguro e otimizado
 app.post('/webhook_mp', async (req, res) => {
   try {
-    const body = req.body;
-    if (body.type === 'payment' && body.data?.id) {
-      const paymentId = body.data.id;
+    // 1. Validar assinatura
+    const signature = req.headers['x-signature'];
+    if (!validaAssinatura(signature, req.body)) {
+      return res.status(403).send('Assinatura inválida');
+    }
 
-      const tokenValid = "APP_USR-4128571484840245-051411-4e2440590f5e3a407cc718aecec17f6e-1361831608";
+    // 2. Processar apenas eventos de pagamento
+    if (req.body.type !== 'payment' || !req.body.data?.id) {
+      return res.status(400).send('Evento não suportado');
+    }
 
-      const response = await axios.get(
-        `https://api.mercadopago.com/v1/payments/${paymentId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${tokenValid}`
-          }
-        }
-      );
+    // 3. Buscar detalhes do pagamento
+    const paymentId = req.body.data.id;
+    const payment = await buscarPagamentoNoMP(paymentId);
 
-      const payment = response.data;
-
-      if (payment.status === 'approved' && payment.payment_type_id === 'pix') {
-        const email = payment.payer?.email;
-        console.log('✅ PIX aprovado pelo Mercado Pago. Email:', email);
-
-        if (email) {
-          const ref = db.ref('usuarios');
-          ref.once('value', (snapshot) => {
-            const usuarios = snapshot.val();
-            for (const id in usuarios) {
-              if (usuarios[id].email === email) {
-                console.log(`🔄 Atualizando plano do usuário ${id}`);
-                ref.child(id).update({ plano: 'premium' });
-                break;
-              }
-            }
-          });
-        }
-      }
+    // 4. Processar PIX aprovado/pendente
+    if (payment.payment_type_id === 'pix' && payment.payer?.email) {
+      await atualizarPlanoNoFirebase(payment.payer.email);
     }
 
     res.sendStatus(200);
   } catch (error) {
-    console.error('❌ Erro no webhook do Mercado Pago:', error?.response?.data || error.message);
-    res.sendStatus(500);
+    console.error('Erro:', error);
+    res.status(500).send('Erro interno');
   }
 });
+
+// --- Funções auxiliares ---
+async function buscarPagamentoNoMP(paymentId) {
+  const response = await axios.get(
+    `https://api.mercadopago.com/v1/payments/${paymentId}`,
+    {
+      headers: {
+        Authorization: `Bearer APP_USR-4128571484840245-051411-4e2440590f5e3a407cc718aecec17f6e-1361831608`
+      }
+    }
+  );
+  return response.data;
+}
+
+async function atualizarPlanoNoFirebase(email) {
+  const snapshot = await db.ref('usuarios')
+    .orderByChild('email')
+    .equalTo(email)
+    .once('value');
+
+  if (snapshot.exists()) {
+    const userId = Object.keys(snapshot.val())[0];
+    await db.ref('usuarios').child(userId).update({ plano: 'premium' });
+  }
+}
 
 // Start
 const PORT = process.env.PORT || 3000;
